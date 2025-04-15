@@ -8,5 +8,3 @@ class choices:
     
     def stand(self):
         return True
-    
-  
