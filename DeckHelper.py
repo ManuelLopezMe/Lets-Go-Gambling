@@ -17,5 +17,9 @@ class Deck:
     def deal_hand(self):
         return [self.deck.pop(), self.deck.pop()]
     
-    def GameDeck(self):
+    def game_deck(self):
         return self.deck
+    
+    def all_cards(self):
+        total = suits*4*self.num_decks
+        return total

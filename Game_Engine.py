@@ -35,7 +35,7 @@ class PlayGame:
     def _check_reshuffle(self):
         """Reshuffles the deck if needed."""
         if len(self.active_deck.game_deck()) <= round(
-            len(self.active_deck.all_cards) * 0.2
+            len(self.active_deck.all_cards()) * 0.2
         ):  # Use all_cards instead of shuffle()
             self.active_deck.shuffle()
 
