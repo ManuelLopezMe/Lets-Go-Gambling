@@ -67,6 +67,7 @@ class PlayGame:
                         break
                 elif action == "stand":
                     print(f"Standing with {current_hand}.")
+                    hand_results.append(0)  # No win/loss for standing
                     break
                 elif action == "double":
                     current_wager *= 2
@@ -78,10 +79,6 @@ class PlayGame:
                         hand_results.append(-current_wager)
                     else:
                         print(f"Standing with {current_hand}.")
-                        dealer_value = PlayHand(
-                            None, dealer_hand, self.active_deck.game_deck()
-                        ).dealer_turn()
-                        hand_results.append(self._determine_payout(player_value, dealer_value, current_wager, action))
                     break
                 elif (
                     action == "split"
@@ -105,10 +102,14 @@ class PlayGame:
 
         # Process dealer's hand once after all player hands are resolved
         dealer_value = PlayHand(None, dealer_hand, self.active_deck.game_deck()).dealer_turn()
-        for hand_result in hand_results:
-            hand_results.append(self._determine_payout(player_value, dealer_value, wager, action))
 
-        return sum(hand_results)
+        # Calculate payouts for all hands
+        payouts = []  # Temporary list to store payouts
+        for current_hand, current_wager in hands_queue:
+            player_value = Hand(current_hand).compute_value()
+            payouts.append(self._determine_payout(player_value, dealer_value, current_wager, "stand"))
+
+        return sum(hand_results + payouts)
 
     def _determine_payout(self, player_value, dealer_value, wager, action):
         """Helper function to determine payout."""
