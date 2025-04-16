@@ -7,58 +7,53 @@ from deck import *
 deck = Deck(num_decks=2)
 deck.shuffle()
 
-class PlayRound:
-    def __init__(self, player_hand, dealer_hand, deck, wager, num):
-        self.player_hand = player_hand
-        self.dealer_hand = dealer_hand
-        self.deck = deck
-        self.wager = wager
-        self.num = num
+class PlayGame:
+    def __init__(self):
+        pass
     
-    def play_round(self):
-            print("Round {num}".format(num=self.num))
-            value = Hand(self.player_hand)
+    def play_round(self, wager, player_hand, dealer_hand):
+            value = Hand(player_hand)
             player_value = value.compute_value()
             
-            value = Hand(self.dealer_hand)
+            value = Hand(player_hand)
             dealer_value = value.compute_value()
             
             if player_value == 21:
                  print('Blackjack! You win!')
-                 return self.wager
+                 return wager
                         
             while player_value < 21:
                 action = input('Hit, stand, double, or split?').lower()
 
                 if action == 'hit':
-                    hand = PlayHand(self.player_hand, None, self.deck)
+                    hand = PlayHand(player_hand, None, self.deck)
                     player_value=hand.player_turn(action)
                     if player_value > 21:
                         print("You Busted")
-                        return 0 - self.wager
+                        return 0 - wager
                 if action == 'stand':
-                    hand = PlayHand(self.player_hand, None, self.deck)
+                    hand = PlayHand(player_hand, None, self.deck)
                     player_value=hand.player_turn(action)
                 
                 if action == 'double':
-                    hand=PlayHand(self.player_hand, None, self.deck)
+                    hand=PlayHand(player_hand, None, self.deck)
                     player_value=hand.player_turn(action)
                     if player_value > 21:
                         print('You busted!')
-                        return 0 - (2*self.wager)
+                        return 0 - (2*wager)
                     else:
                         while dealer_value < 21 or dealer_value <= player_value:
                             dealer_value=hand.dealer_turn()
                         if player_value > dealer_value:
-                            return 2*self.wager
+                            return 2*wager
                         elif player_value == dealer_value:
                             return 0
                         elif player_value < dealer_value:
-                            return 0 - (2*self.wager)
+                            return 0 - (2*wager)
 
-                if action == 'split' and len(self.player_hand)==2 and self.player_hand[0] == self.player_hand[1]:
-                    right_hand = [self.player_hand.pop()].append(deck.pop())
-                    left_hand = self.player_hand.append(deck.pop())
+                if action == 'split' and len(player_hand)==2 and player_hand[0] == player_hand[1]:
+                    right_hand = [player_hand.pop()].append(deck.pop())
+                    left_hand = player_hand.append(deck.pop())
                     
                     right_value = Hand(right_hand).compute_value()
                     left_value = Hand(left_hand).compute_value()
@@ -101,37 +96,37 @@ class PlayRound:
                             break
                     if left_value > dealer_value and right_value > dealer_value:
                         if left_action == 'double' and right_action == 'double':
-                            return 4*self.wager
+                            return 4*wager
                         elif left_action == 'double' and right_action != 'double':
-                            return 3*self.wager
+                            return 3*wager
                         else:
-                            return 2*self.wager
+                            return 2*wager
                     if (left_value > dealer_value and right_value == dealer_value) or (left_value == dealer_value and right_value > dealer_value):
                         if left_action == 'double' or right_action == 'double':
-                            return 2*self.wager
+                            return 2*wager
                         else:
-                            return self.wager
+                            return wager
                     if (left_value > dealer_value and right_value < dealer_value) or (left_value < dealer_value and right_value > dealer_value):
                         if left_action == 'double' and right_action != 'double':
-                            return self.wager
+                            return wager
                         elif left_action == 'double' and right_action == 'double':
                             return 0
                         if left_action != 'double' and right_action == 'double':
-                            return 0 - self.wager
+                            return 0 - wager
                         else:
                             return 0
                     if left_value == dealer_value and right_value > dealer_value:
                         if right_action == 'double':
-                            return self.wager
+                            return wager
                         else:
                             return 0
                     if left_value < dealer_value and right_value < dealer_value:
                         if left_action == 'double' and right_action != 'double':
-                            return self.wager
+                            return wager
                         elif left_action == 'double' and right_action == 'double':
                             return 0
                         if left_action != 'double' and right_action == 'double':
-                            return 0 - self.wager
+                            return 0 - wager
                         else:
                             return 0
                     
@@ -141,18 +136,33 @@ class PlayRound:
                         break
                 if player_value > dealer_value:
                     if action == 'double':
-                        return 2*self.wager
+                        return 2*wager
                     else:
-                        return self.wager
+                        return wager
                 elif player_value == dealer_value:
                     return 0
                 elif player_value < dealer_value:
                     if action == 'double':
-                        return 0 - (self.wager)
+                        return 0 - (wager)
                     else:
-                        return 0 - (2*self.wager)
-                
-
+                        return 0 - (2*wager)
+    
+    def play_game(self, bankroll=100, num_rounds=10, num_decks = 2):
+        rounds_played = 0
+        deck = Deck(num_decks)
+        deck.shuffle()
+        total_deck_size = len(deck)
+        while (rounds_played <= num_rounds) or bankroll > 0:
+            wager = int(input('select wager amount'))
+            player_hand = deck.deal_hand()
+            dealer_hand = deck.deal_hand()
+            if wager > self.bankroll:
+                print("Not enough to wager, enter amount less than ${bankroll}".format(bankroll))
+                wager = int(input('select wager amount'))
+            bankroll += self.play_round(wager, player_hand, dealer_hand)
+            rounds_played += 1
+            if len(deck) <= total_deck_size*.2:
+                deck.shuffle()
 
 class PlayHand:
     def __init__(self, player_hand, dealer_hand, deck):
@@ -195,6 +205,6 @@ class PlayHand:
                 "Dealer busted!"
                 return 'done', dealer_value
 
-                  
+PlayGame()
                     
 print("Thanks for playing!")
