@@ -132,6 +132,10 @@ class PlayGame:
 
         while self.rounds_played < self.num_rounds and self.bankroll > 0:
             wager = self._get_wager()
+
+            # Deduct the wager from the bankroll at the start of the round
+            self.bankroll -= wager
+
             player_hand, dealer_hand = self._deal_cards()
 
             print(
@@ -140,6 +144,7 @@ class PlayGame:
                 )
             )
 
+            # Add the result of the round to the bankroll
             self.bankroll += self.play_round(wager, player_hand, dealer_hand)
             self.rounds_played += 1
             self._check_reshuffle()
