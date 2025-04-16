@@ -92,9 +92,11 @@ class PlayGame:
                 print('Left hand: {left}'.format(left=left_hand))
 
                 # Recursive calls for each hand after the split
-                hand_results.append(self.play_round(wager, left_hand, dealer_hand[:]))  
-                hand_results.append(self.play_round(wager, right_hand, dealer_hand[:]))
-                break
+                print("Playing your right hand first")
+                hand_results.append(self.play_round(wager, right_hand, dealer_hand[:])) 
+                print("Now playing your left hand: {left}".format(left=left_hand)) 
+                hand_results.append(self.play_round(wager, left_hand, dealer_hand[:]))
+                #break
             else:
                 print("Invalid action. Please choose hit, stand, double, or split.")
 
