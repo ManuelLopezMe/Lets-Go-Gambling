@@ -19,8 +19,3 @@ class Hand:
             aces -= 1
         return self.hand_value
 
-class PlayersBankroll:
-    def __init__(self, bank = 100, wager = 5):
-        self.bank = bank
-        self.wager = wager
-    
