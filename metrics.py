@@ -7,6 +7,7 @@ class Hand:
         self.aces = 0
     
     def compute_value(self):
+        aces = 0
         for card in self.hand:
             if card == 'A':
                 aces += 1
@@ -23,4 +24,3 @@ class PlayersBankroll:
         self.bank = bank
         self.wager = wager
     
-class 
