@@ -13,7 +13,7 @@ class PlayGame:
 
     def _deal_cards(self):
         """Deals initial cards to player and dealer."""
-        player_hand = self.active_deck.deal_hand()
+        player_hand = ['A', 'A'] ##self.active_deck.deal_hand()
         dealer_hand = self.active_deck.deal_hand()
         return player_hand, dealer_hand
 
@@ -39,193 +39,87 @@ class PlayGame:
         ):  # Use all_cards instead of shuffle()
             self.active_deck.shuffle()
 
-    def play_round(self, wager, player_hand, dealer_hand):  # Removed deck argument
-        player_value = Hand(player_hand).compute_value()  # Calculate player value
-
-        dealer_value = Hand(dealer_hand).compute_value()  # Calculate dealer value
+    def play_round(self, wager, player_hand, dealer_hand):
+        player_value = Hand(player_hand).compute_value()
+        dealer_value = Hand(dealer_hand).compute_value()
+        hand_results = []  # To store results of each hand
 
         if player_value == 21:
             print("Blackjack! You win!")
             return wager
 
-        while player_value < 21:
+        while True:  # Changed from 'while player_value < 21' to allow for split actions
             action = input("Hit, stand, double, or split? ").lower()
 
             if action == "hit":
                 player_value = PlayHand(
                     player_hand, None, self.active_deck.game_deck()
-                ).player_turn(
-                    action
-                )  # Pass game_deck()
+                ).player_turn(action)
                 if player_value > 21:
                     print("You Busted")
-                    return -wager  # Use negative for loss
+                    hand_results.append(-wager)  # Loss for this hand
+                    break
             elif action == "stand":
                 player_value = PlayHand(
                     player_hand, None, self.active_deck.game_deck()
-                ).player_turn(
-                    action
-                )  # Pass game_deck()
+                ).player_turn(action)
                 break  # Exit loop on stand
             elif action == "double":
                 player_value = PlayHand(
                     player_hand, None, self.active_deck.game_deck()
-                ).player_turn(
-                    action
-                )  # Pass game_deck()
+                ).player_turn(action)
                 if player_value > 21:
                     print("You busted!")
-                    return -2 * wager
-                else:  # double down only allows one hit
+                    hand_results.append(-2 * wager)  # Loss for this hand
+                    break
+                else:
                     dealer_value = PlayHand(
                         None, dealer_hand, self.active_deck.game_deck()
-                    ).dealer_turn()  # Pass game_deck()
-
-                    if player_value > dealer_value:
-                        return 2 * wager
-                    elif player_value == dealer_value:
-                        return 0
-                    else:
-                        return -2 * wager
+                    ).dealer_turn()
+                    hand_results.append(self._determine_payout(player_value, dealer_value, wager, action))
+                    break
             elif (
                 action == "split"
                 and len(player_hand) == 2
                 and player_hand[0] == player_hand[1]
+                and len(hand_results) < 4 # Limit to 4 hands max
             ):
                 right_hand = [player_hand.pop()]
-                right_hand.append(self.active_deck.game_deck().pop())  # Pass game_deck()
+                right_hand.append(self.active_deck.game_deck().pop())
+                print('Right hand: {right}'.format(right=right_hand))
                 left_hand = player_hand
-                left_hand.append(self.active_deck.game_deck().pop())  # Pass game_deck()
+                left_hand.append(self.active_deck.game_deck().pop())
+                print('Left hand: {left}'.format(left=left_hand))
 
-                right_value = Hand(right_hand).compute_value()
-                left_value = Hand(left_hand).compute_value()
-
-                # play right hand first
-                right_action = None
-                left_action = None
-                while right_value <= 21:
-                    right_action = input("Hit, stand, or double? ").lower()
-
-                    if right_action == "double":
-                        right_value = PlayHand(
-                            player_hand=right_hand,
-                            dealer_hand=None,
-                            deck=self.active_deck.game_deck(),
-                        ).player_turn(
-                            right_action
-                        )  # Pass game_deck()
-                        break
-                    elif right_action == "hit":
-                        right_value = PlayHand(
-                            player_hand=right_hand,
-                            dealer_hand=None,
-                            deck=self.active_deck.game_deck(),
-                        ).player_turn(
-                            right_action
-                        )  # Pass game_deck()
-                    elif right_action == "stand":
-                        right_value = PlayHand(
-                            player_hand=right_hand,
-                            dealer_hand=None,
-                            deck=self.active_deck.game_deck(),
-                        ).player_turn(
-                            right_action
-                        )  # Pass game_deck()
-                        break
-
-                # play left hand
-                while left_value <= 21:
-                    left_action = input("Hit, stand, or double? ").lower()
-
-                    if left_action == "double":
-                        left_value = PlayHand(
-                            player_hand=left_hand,
-                            dealer_hand=None,
-                            deck=self.active_deck.game_deck(),
-                        ).player_turn(
-                            left_action
-                        )  # Pass game_deck()
-                        break
-                    elif left_action == "hit":
-                        left_value = PlayHand(
-                            player_hand=left_hand,
-                            dealer_hand=None,
-                            deck=self.active_deck.game_deck(),
-                        ).player_turn(
-                            left_action
-                        )  # Pass game_deck()
-                    elif left_action == "stand":
-                        left_value = PlayHand(
-                            player_hand=left_hand,
-                            dealer_hand=None,
-                            deck=self.active_deck.game_deck(),
-                        ).player_turn(
-                            left_action
-                        )  # Pass game_deck()
-                        break
-
-                dealer_value = PlayHand(
-                    None, dealer_hand, self.active_deck.game_deck()
-                ).dealer_turn()  # Pass game_deck()
-
-                # Possible Payouts
-                if left_value > dealer_value and right_value > dealer_value:
-                    if left_action == "double" and right_action == "double":
-                        return 4 * wager
-                    elif left_action == "double" and right_action != "double":
-                        return 3 * wager
-                    else:
-                        return 2 * wager
-                elif (
-                    left_value > dealer_value and right_value == dealer_value
-                ) or (left_value == dealer_value and right_value > dealer_value):
-                    if left_action == "double" or right_action == "double":
-                        return 2 * wager
-                    else:
-                        return wager
-                elif (
-                    left_value > dealer_value and right_value < dealer_value
-                ) or (left_value < dealer_value and right_value > dealer_value):
-                    if left_action == "double" and right_action != "double":
-                        return wager
-                    elif left_action == "double" and right_action == "double":
-                        return 0
-                    elif left_action != "double" and right_action == "double":
-                        return -wager
-                    else:
-                        return 0
-                elif left_value == dealer_value and right_value > dealer_value:
-                    if right_action == "double":
-                        return wager
-                    else:
-                        return 0
-                elif left_value < dealer_value and right_value < dealer_value:
-                    if left_action == "double" and right_action != "double":
-                        return wager
-                    elif left_action == "double" and right_action == "double":
-                        return 0
-                    elif left_action != "double" and right_action == "double":
-                        return -wager
-                    else:
-                        return 0
+                # Recursive calls for each hand after the split
+                hand_results.append(self.play_round(wager, left_hand, dealer_hand[:]))  
+                hand_results.append(self.play_round(wager, right_hand, dealer_hand[:]))
+                break
             else:
                 print("Invalid action. Please choose hit, stand, double, or split.")
 
-        dealer_value = PlayHand(
-            None, dealer_hand, self.active_deck.game_deck()
-        ).dealer_turn()  # Dealer's turn
+        if not hand_results:  # If no split occurred
+            dealer_value = PlayHand(
+                None, dealer_hand, self.active_deck.game_deck()
+            ).dealer_turn()
+            hand_results.append(self._determine_payout(player_value, dealer_value, wager, action))
+
+        return sum(hand_results)  # Sum up the results from all hands
+
+    def _determine_payout(self, player_value, dealer_value, wager, action):
+        """Helper function to determine payout."""
+
+        if player_value > 21:
+            return -wager if action != "double" else -2 * wager
+        if dealer_value > 21:
+            return wager if action != "double" else 2 * wager
+
         if player_value > dealer_value:
-            if action == "double":
-                return 2 * wager
-            else:
-                return wager
+            return wager if action != "double" else 2 * wager
         elif player_value == dealer_value:
             return 0
         else:
-            if action == "double":
-                return -wager
-            else:
-                return -wager  # Should be -wager, not -2*wager (already doubled)
+            return -wager if action != "double" else -2 * wager
 
     def play_game(self, num_decks=2):  # Moved default args to __init__
         self.active_deck = Deck(num_decks)
