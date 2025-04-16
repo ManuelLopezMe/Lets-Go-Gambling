@@ -1,5 +1,4 @@
 import numpy as np
-from player_choices import *
 
 suits = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
@@ -9,12 +8,14 @@ class Deck:
         self.deck = suits*4*num_decks
 
     def shuffle(self):
+        self.deck = suits*4*self.num_decks
         np.random.shuffle(self.deck)
-        return self.deck
     
     def deal_card(self):
         return self.deck.pop()
     
     def deal_hand(self):
         return [self.deck.pop(), self.deck.pop()]
-
+    
+    def GameDeck(self):
+        return self.deck
