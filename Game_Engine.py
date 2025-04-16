@@ -13,7 +13,7 @@ class PlayGame:
 
     def _deal_cards(self):
         """Deals initial cards to player and dealer."""
-        player_hand = ['A', 'A'] ##self.active_deck.deal_hand()
+        player_hand = self.active_deck.deal_hand()
         dealer_hand = self.active_deck.deal_hand()
         return player_hand, dealer_hand
 
