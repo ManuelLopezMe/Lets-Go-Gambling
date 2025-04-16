@@ -48,65 +48,67 @@ class PlayGame:
             print("Blackjack! You win!")
             return wager
 
-        while True:  # Changed from 'while player_value < 21' to allow for split actions
-            action = input("Hit, stand, double, or split? ").lower()
+        # Use a queue to manage hands (iterative approach)
+        hands_queue = [(player_hand, wager)]
+        while hands_queue:
+            current_hand, current_wager = hands_queue.pop(0)
+            player_value = Hand(current_hand).compute_value()
 
-            if action == "hit":
-                player_value = PlayHand(
-                    player_hand, None, self.active_deck.game_deck()
-                ).player_turn(action)
-                if player_value > 21:
-                    print("You Busted")
-                    hand_results.append(-wager)  # Loss for this hand
+            while True:
+                action = input(f"Hit, stand, double, or split? ({current_hand}): ").lower()
+
+                if action == "hit":
+                    player_value = PlayHand(
+                        current_hand, None, self.active_deck.game_deck()
+                    ).player_turn(action)
+                    if player_value > 21:
+                        print(f"You busted with {current_hand}!")
+                        hand_results.append(-current_wager)
+                        break
+                elif action == "stand":
+                    print(f"Standing with {current_hand}.")
                     break
-            elif action == "stand":
-                player_value = PlayHand(
-                    player_hand, None, self.active_deck.game_deck()
-                ).player_turn(action)
-                break  # Exit loop on stand
-            elif action == "double":
-                player_value = PlayHand(
-                    player_hand, None, self.active_deck.game_deck()
-                ).player_turn(action)
-                if player_value > 21:
-                    print("You busted!")
-                    hand_results.append(-2 * wager)  # Loss for this hand
+                elif action == "double":
+                    current_wager *= 2
+                    player_value = PlayHand(
+                        current_hand, None, self.active_deck.game_deck()
+                    ).player_turn(action)
+                    if player_value > 21:
+                        print(f"You busted with {current_hand}!")
+                        hand_results.append(-current_wager)
+                    else:
+                        print(f"Standing with {current_hand}.")
+                        dealer_value = PlayHand(
+                            None, dealer_hand, self.active_deck.game_deck()
+                        ).dealer_turn()
+                        hand_results.append(self._determine_payout(player_value, dealer_value, current_wager, action))
+                    break
+                elif (
+                    action == "split"
+                    and len(current_hand) == 2
+                    and current_hand[0] == current_hand[1]
+                    and len(hand_results) + len(hands_queue) < 4  # Limit to 4 hands max
+                ):
+                    right_hand = [current_hand.pop()]
+                    right_hand.append(self.active_deck.game_deck().pop())
+                    left_hand = current_hand
+                    left_hand.append(self.active_deck.game_deck().pop())
+                    print(f"Right hand: {right_hand}")
+                    print(f"Left hand: {left_hand}")
+
+                    # Add split hands to the queue
+                    hands_queue.append((right_hand, current_wager))
+                    hands_queue.append((left_hand, current_wager))
                     break
                 else:
-                    dealer_value = PlayHand(
-                        None, dealer_hand, self.active_deck.game_deck()
-                    ).dealer_turn()
-                    hand_results.append(self._determine_payout(player_value, dealer_value, wager, action))
-                    break
-            elif (
-                action == "split"
-                and len(player_hand) == 2
-                and player_hand[0] == player_hand[1]
-                and len(hand_results) < 4 # Limit to 4 hands max
-            ):
-                right_hand = [player_hand.pop()]
-                right_hand.append(self.active_deck.game_deck().pop())
-                print('Right hand: {right}'.format(right=right_hand))
-                left_hand = player_hand
-                left_hand.append(self.active_deck.game_deck().pop())
-                print('Left hand: {left}'.format(left=left_hand))
+                    print("Invalid action. Please choose hit, stand, double, or split.")
 
-                # Recursive calls for each hand after the split
-                print("Playing your right hand first")
-                hand_results.append(self.play_round(wager, right_hand, dealer_hand[:])) 
-                print("Now playing your left hand: {left}".format(left=left_hand)) 
-                hand_results.append(self.play_round(wager, left_hand, dealer_hand[:]))
-                #break
-            else:
-                print("Invalid action. Please choose hit, stand, double, or split.")
-
-        if not hand_results:  # If no split occurred
-            dealer_value = PlayHand(
-                None, dealer_hand, self.active_deck.game_deck()
-            ).dealer_turn()
+        # Process dealer's hand once after all player hands are resolved
+        dealer_value = PlayHand(None, dealer_hand, self.active_deck.game_deck()).dealer_turn()
+        for hand_result in hand_results:
             hand_results.append(self._determine_payout(player_value, dealer_value, wager, action))
 
-        return sum(hand_results)  # Sum up the results from all hands
+        return sum(hand_results)
 
     def _determine_payout(self, player_value, dealer_value, wager, action):
         """Helper function to determine payout."""
