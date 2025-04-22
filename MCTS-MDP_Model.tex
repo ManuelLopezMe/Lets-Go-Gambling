@@ -1,0 +1,407 @@
+
+\documentclass[12pt,a4paper]{cibb}
+
+\usepackage{subfigure,graphicx}
+\usepackage{amsmath,amsfonts,latexsym,amssymb,euscript,xr}
+\usepackage{booktabs}
+\usepackage[nodayofweek]{datetime}
+\usepackage{hyperref}
+
+\usepackage[table]{xcolor}
+\usepackage{color,colortbl,tabularx}
+
+\usepackage[english]{babel}
+\usepackage[protrusion=true,expansion=true]{microtype}
+\usepackage{amsmath,amsfonts,amsthm}
+% \usepackage[pdftex]{graphicx}
+\usepackage{pifont}
+
+\def\red{\color{red}}
+\def\black{\color{black}}
+\def\blue{\color{blue}}
+\def\magenta{\color{magenta}}
+
+\definecolor{LightBlue}{rgb}{0.88,0.9,0.9}
+
+
+\title{\Large $\ $\\ \bf Finding the Optimal Blackjack Strategy Using Monte Carlo Markov Decision Process}
+
+\author{\large Manuel Lopez-Mejia}
+\address{\footnotesize 
+College of Engineering, North Carolina State University, Raleigh, USA, manuel.lopezme05@gmail.com, 92855
+%
+}
+
+
+\abstract{\small Blackjack, Monte Carlo Tree Search, Markov Decision Process, Markov Chains, Dynamic Programming. \normalsize
+\\[17pt]
+{\bf Abstract.} In this paper, I will introduce the concept of Bayesian Probability and how it can be applied to Blackjack in order to predict the next card in the game deck. We will extend this formulation to calculate the expected value of making a particular decision in a game (e.g., Hit, Stand, Double Down, or Split) in order to find what will maximize the player's return. We will model the player's behavior using a Markov Decision Process and use Monte Carlo Tree Search algorithm to estimate value functions by averaging returns from simulated episodes.}
+
+\begin{document}
+\thispagestyle{myheadings}
+\pagestyle{myheadings}
+
+
+\section{Introduction}
+\label{sec:SCIENTIFIC-BACKGROUND}
+
+Blackjack is a popular card game where you try to reach a hand as close to 21 as possible without going over (busting). [cite: 4]
+If you are able to have a higher hand than the dealers hand, you win. [cite: 5]
+Cards are ranked with values from 1 to 11, with Ace being worth 1 or 11 (whichever is optimal) and face cards (Kings, Queens, and Jacks) being valued at 10. [cite: 6]
+
+Players and the dealer are initially dealt a pair of cards which are shown to everyone except for one of the dealers cards. [cite: 6]
+Players move first, choosing to either stand, hit (draw one more card), double down (double one'es wager by drawing one card and then stand), and if dealt a hand with a pair of the exact same cards, split where you can split your current hand into two new hands and wager the same amount on each. [cite: 7]
+After a player stands, the dealers hidden card is shown and he must hit until he reaches at least 17. For every round of Blackjack played, cards are drawn without replacement until they're reshuffled, typically once 15 to 50 percent of the game deck has been drawn. [cite: 8]
+My fascination with Blackjack started when I was a kid playing Pirates of the Caribbean: The Curse of the Black Pearl video game, a kids MMORPG based off the self-titled film,where players could play Blackjack in taverns and underground parlors. [cite: 9]
+Today, with the rising popularity of online gambling among young men[1], and also my personal consumption of clips of the gambling influencer known as "Togi" who believes that "gambling addiction isn't real", I became interested in exploring methods in stochastic simulation and mathematical programming to find what will give you the best chance at winning in a game of blackjack. [cite: 10]
+
+\section{Background}
+\label{sec:Theory}
+
+\subsection{Bayesian Probability}
+
+Since the game is played with a finite set of cards (a shoe can consist of any number set of cards, typically 6 decks in Casino games) and we can have some information of what cards have been played, we can estimate the probability of what the next card in the shoe will be and what the final dealer hand's will be so that we know what actions will give us the best chance at beating the dealer and maximize our winnings. [cite: 11]
+As the game continues and we continue draw more cards, we gain more information of what the shoe composition looks like and are able to predict with more certainty the likelihood of what cards will be drawn next. [cite: 12]
+This is what Bayesian Probability is about, updating our beliefs as new information comes to light. [cite: 13]
+
+\subsubsection{Formulation}
+Let:
+    \begin{itemize}
+  \item <span class="math-inline">H</span>: the player's current hand (multiset of ranks)
+  \item <span class="math-inline">U</span>: the dealer's upcard
+  \item <span class="math-inline">P</span>: multiset of all cards dealt so far (player, dealer, past rounds)
+  \item <span class="math-inline">R \= \\\{\\mathrm\{A\},2,3,\\dots,10,\\mathrm\{J\},\\mathrm\{Q\},\\mathrm\{K\}\\\}</span>: set of ranks
+  \item <span class="math-inline">m\_r \= 4</span>, the number of cards of rank <span class="math-inline">r</span> per deck, for each <span class="math-inline">r\\in R</span>
+  \item <span class="math-inline">D\\in\\mathbb\{N\}</span>: number of decks in the shoe
+\end{itemize}
+
+The initial count of cards of rank <span class="math-inline">r</span> in the shoe is
+\[
+  x_r^{(0)} = D \cdot m_r, \quad r\in R,
+\]
+and the initial total number of cards is
+\[
+  N^{(0)} = \sum_{r\in R} x_r^{(0)} = 52D.
+\]
+
+Let
+\[
+  O = H \cup \{U\} \cup P
+\]
+be the multiset of all observed cards. [cite: 14, 15]
+For each rank <span class="math-inline">r</span>, define
+\[
+  \Delta_r = \bigl|\{c \in O : \mathrm{rank}(c)=r\}\bigr|,
+\]
+i.e., the number of cards of rank <span class="math-inline">r</span> removed from the shoe. [cite: 16]
+Then the remaining count of rank <span class="math-inline">r</span> is
+\[
+  X_r = x_r^{(0)} - \Delta_r,
+\]
+and the total remaining cards is
+\[
+  N = \sum_{r\in R} X_r = 52D - |O|.
+\]
+
+\subsubsection{Probability of Drawing Rank Value}
+
+Since draws are without replacement and the remaining cards are identically distributed, the probability that the next card has rank <span class="math-inline">r</span> given the current state <span class="math-inline">\(H,U,P\)</span> is
+\[
+  \mathbb{P}\bigl(\mathrm{rank}(\text{next card}) = r \mid H, U, P\bigr)
+  = \frac{X_r}{N}.
+\]
+
+\subsubsection{Proof}
+
+By symmetry, each of the <span class="math-inline">N</span> remaining cards is equally likely.  Of these, exactly <span class="math-inline">X\_r</span> have rank <span class="math-inline">r</span>. [cite: 17, 18, 19, 20]
+Thus the probability of drawing rank <span class="math-inline">r</span> is the fraction of remaining cards of that rank. [cite: 20]
+
+\subsection{Expected Value of Player's Hand}
+\label{sec:Expected Value}
+For our model, we want to select the action that maximizes the player's expected value (AKA "expected utility"). [cite: 21]
+In this case, expected value is the payoff we receive from our wager based on whether we choose to Hit, Stand, Double Down, or Split (if possible). [cite: 22]
+
+\subsubsection{Formulation}
+
+Let:
+\begin{itemize}
+    \item \( R = \{A, 2, 3, \dots, 10, J, Q, K\} \): Set of card ranks. [cite: 23]
+    \item \( X_r \): Number of cards of rank \(r\) remaining in the deck(s). [cite: 24]
+    \item \( N = \sum_{r \in R} X_r \): Total number of cards remaining. [cite: 25]
+    \item \( \Pr(r) = \dfrac{X_r}{N} \): Probability of drawing a card of rank \(r\). [cite: 26]
+    \item \( H \): The player's current hand (a multiset).
+    \item \( U \): The dealer's upcard. [cite: 27, 28, 29, 30, 31, 32]
+    \item \( P \): The multiset of all cards drawn in previous rounds (observable history).
+    \item \( v(H) \): The value of hand \(H\), treating Aces optimally.
+    \item \( σ \in \{0,1,2,3\} \): Number of splits remaining.
+    \item \( P_D(y \mid U, P) \): Probability that the dealer ends with value \(y\), given upcard \(U\) and card history \(P\).
+\end{itemize}
+
+\subsubsection*{Payoff Function}
+For simplicity denote \textit{x} as \( V(H_F)\) and \textit{y} denote the final hand value of the dealer, the final value of the hand of the player. [cite: 32, 33]
+The payoff function is represented by
+\[
+g(x, y) =
+\begin{cases}
++1, & x \leq 21 \text{ and } (y > 21 \text{ or } x > y) \\
+0, & x \leq 21,\, y \leq 21,\, x = y \\
+-1, & \text{otherwise}
+\end{cases}
+\]
+\subsubsection*{Expected Value Formulas}
+
+\textbf{Expected Values for Each Action}
+
+\begin{enumerate}
+    \item \textbf{Standing}: Take no more cards
+    \begin{equation}
+        \mathrm{EV}_{\text{stand}}(H) = \sum_{y=17}^{22} P_D(y \mid U, P) \cdot g(v(H), y)
+        \label{eq:EV_STAND}
+    \end{equation}
+
+    \item \textbf{Hitting}: Draw 1 card
+    \begin{equation}
+          \mathrm{EV}_{\text{hit}}(H, σ  ) = \sum_{r \in R} \frac{X_r}{N} \cdot \mathrm{EV}^*(H \cup \{r\}, σ  )
+        \label{eq:EV_HIT}
+    \end{equation}
+You draw one card rank r) with probability \(x_r/N\). [cite: 33, 34, 35]
+Update your hand to \(H \cup \{r\}\). Choose the best action given the same number of splits remaining
+
+    \item \textbf{Doubling Down}: Double the wager, draw once and stand
+    \begin{equation}
+        \mathrm{EV}_{\text{dd}}(H) = \sum_{r \in R} \frac{X_r}{N} \cdot 2 \cdot \mathrm{EV}_{\text{stand}}(H \cup \{r\})
+        \label{eq:EV_DOUBLE}
+    \end{equation}
+
+    \item \textbf{Splitting} (if <span class="math-inline">H \= \\\{r, r\\\}</span> and <span class="math-inline">σ \\geq 1</span>)
+
+    Let <span class="math-inline">X\_\{r\_2\}^\{\(\-r\_1\)\}</span> denote the updated count of <span class="math-inline">r\_2</span> after removing <span class="math-inline">r\_1</span> from the deck. [cite: 35, 36, 37, 38, 39]
+    \begin{equation}
+        \mathrm{EV}_{\text{split}}(H = \{r, r\}, σ  ) = \sum_{r_1 \in R} \sum_{r_2 \in R} \frac{X_{r_1}}{N} \cdot \frac{X_{r_2}^{(-r_1)}}{N - 1} \cdot \left[ \mathrm{EV}^*(\{r, r_1\}, σ   - 1) + \mathrm{EV}^*(\{r, r_2\}, σ   - 1) \right]
+        \label{eq:EV_SPLIT}
+    \end{equation}
+\({X_{r_2}^{(-r_1)}}\) is the count of \(r_2\) after removing the \(r_1\) drawn from the first split.
+You draw 2 new cards, which couple with <span class="math-inline">r\_1</span> and <span class="math-inline">r\_2</span> separately to form 2 new hands: a right hand \( \{r_1, r\}\) and left hand \( \{r_2, r\}\).
+Each hand is played optimally with <span class="math-inline">σ\-1</span> remaining splits. Since you now have 2 hands, their expected values are added together.
+\end{enumerate}
+
+\subsubsection*{Optimal Action Value}
+
+At every game state we choose the expected value that maximizes our return
+\begin{equation}
+\mathrm{EV}^*(H, σ  ) =
+\max \left\{
+\mathrm{EV}_{\text{stand}}(H),
+\mathrm{EV}_{\text{hit}}(H, σ  ),
+\mathrm{EV}_{\text{dd}}(H),
+\left[\mathrm{EV}_{\text{split}}(H, σ  )\right]_{H = \{r, r\},\, σ   \geq 1}
+\right\}
+\label{eq:OBJ_FUNCTION}
+    \end{equation}
+The objective function defines a recursive dynamic program that can be solved backwards from terminal hands (bust or stand) upwards. [cite: 39, 40, 41, 42, 43, 44, 45]
+
+\section*{Method: Markov Decision Process }
+A Markov Process refers to a process where the possibility of arriving at a certain state depends on the conditions of the current state. For example, the probability of us being able to split in the next state depends on whether or not we've exhausted all our possible splits in the current state.
+
+However since the probability of the next state depends on the players decision and we want to maximize the probability obtaining the state with the highest expected value, we will be using a special case known as the Markov Decision Process (MDP) where outcomes are partly random and partly under the agents (e.g, the player) control
+
+Let 
+\begin{description}
+  \item[States:] \( s = (H, U, X, σ) \), where:
+  \begin{itemize}
+    \item \( H \): Player's current hand (multiset of ranks)
+    \item \( U \): Dealer's upcard
+    \item \( X = (X_r)_{r \in R} \): Remaining counts of each rank
+    \item \( σ\in \{0,1,2,3\} \): Number of splits remaining
+  \end{itemize}
+  \item[Actions:] \( A(s) = \{\mathrm{Stand},\; \mathrm{Hit},\; \mathrm{Double},\; \mathrm{Split}\ \text{if } H = \{r,r\} \text{ and } \sigma \geq 1 \}
+
+The probability of reaching a particular next state $s'$ from $A(s)$ can be formulated by the following transition functions
+
+  \item[Transitions:]
+  \begin{itemize}
+    \item \textbf{Stand:} Dealer plays out.
+    Transition to terminal state.\\
+    \( P(s' \mid s, \mathrm{Stand}) = P_D(y \mid U, X) \), where \( s' \) encodes terminal outcome with dealer total \( y \)
+
+    \item \textbf{Hit:} Draw one card \( r \) with probability \( \frac{X_r}{N} \).\\
+    \( s' = (H \cup \{r\}, U, X^{(-r)}, σ) \)
+
+    \item \textbf{Double:} Draw one card \( r \), then stand.
+    Terminal transition.\\
+    \( s' = \text{terminal with doubled reward, dealer plays out} \)
+
+    \item \textbf{Split:} If allowed, draw two cards \( r_1, r_2 \) without replacement.\\
+    Create two hands: \( (\{r, r_1\}, U, X^{(-\{r, r_1\})}, σ-1) \) and \( (\{r, r_2\}, U, X^{(-\{r, r_2\})}, σ-1) \)
+  \end{itemize}
+
+  \item[Rewards:] 0 for non-terminal steps.
+  Terminal reward:
+  \[
+    R = g(\text{player total},\; \text{dealer total})
+  \]
+  Doubled if action = Double. 
+  Intermediate transitions have reward 0. Terminal transitions deliver $ R = g($Player Total, Dealer Total) or doubled if action $a$ = Double Down
+   
+  \item[Discount:] \( \gamma = 1 \)
+    Assume a risk factor of 1 since the game is finite and we care only about the total undiscounted payoff.
+\end{description}
+
+\subsection*{Bellman Optimality Equations}
+
+Our goal can therefore be written as maximizing the expected value of state S
+\[
+  V^*(s) = \max_{a \in A(s)} Q(s, a)
+\]
+where
+\[
+  Q(s,a) = \sum_{s'} P(s' \mid s, a) \left[ R(s,a,s') + V^*(s') \right]
+\]
+
+The expected value for each action can be given as:
+
+\begin{itemize}
+  \item \textbf{Stand:}
+  \[
+    Q(s, \mathrm{Stand}) = \sum_{y=17}^{22} P_D(y \mid U, X)\; g(v(H), y)
+  \]
+
+  \item \textbf{Hit:}
+  \[
+    Q(s, \mathrm{Hit}) = \sum_{r \in R} \frac{X_r}{N}\; V^*(H \cup \{r\}, U, X^{(-r)}, s_{\text{split}})
+  \]
+
+  \item \textbf{Double:}
+  \[
+    Q(s, \mathrm{Double}) = \sum_{r \in R} \frac{X_r}{N} \cdot 2 \sum_{y=17}^{22} P_D(y \mid U, X)\; g(v(H \cup \{r\}), y)
+  \]
+\end{itemize}
+
+\subsection{Steps to Solve with Dynamic Programming}
+
+\begin{enumerate}
+  \item Initialize \( V_0(s) = 0 \) for all \( s \), or to known terminal values.
+  \item Repeat until convergence:
+  \[
+    V_{k+1}(s) = \max_{a \in A(s)} \sum_{s'} P(s' \mid s, a) [ R(s,a,s') + V_k(s') ]
+  \]
+  \item Policy extraction:
+  \[
+    \pi^*(s) = \arg\max_{a \in A(s)} \sum_{s'} P(s' \mid s,a) [ R(s,a,s') + V^*(s') ]
+  \]
+\end{enumerate}
+
+\subsection{Limitations}
+This requires we pre-compute $P_d(y|U, x)$ for each dealer upcard $U$ and card-count $x$, iterate over all reachable states of $(H, U, x, σ)$ and store their values. So that in a given state we lookup the optimal policy $π$ to take.
+
+However, this is gravely computationally intensive because there can be ${52D}\choose{k}$ possible states for a given hand of size K. For example, suppose a game with a shoe of 6 decks, the number of possible combinations for the players initial hand is ${312}\choose{2}$=$48,516$. This count skyrockets as you allow $k$ to grow as the player increases his hand count.
+\documentclass[12pt]{article}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{enumitem}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\section{Method: Monte Carlo Tree Search for Blackjack MDP}
+
+Dealing with the Blackjack MDP can get tricky because figuring out the perfect strategy involves looking at tons of possible game states. Doing this directly is often just too computationally overwhelming. This is where ideas like Monte Carlo simulations come in handy, famously used by Stanislaw Ulam who faced a similar puzzle: figuring out the odds of winning a game of solitaire without checking every single card combination. The clever idea was to simulate the game many times (say, 100 trials on a computer) to get a good estimate. Since this relied on chance and simulation, Ulam fittingly named it after the Monte Carlo casino \cite{ulam_monte_carlo_19xx}. % add citation
+
+For our Blackjack problem, we'll use a specific kind of Monte Carlo method called Monte Carlo Tree Search (MCTS). It's a smart approach for games like Blackjack where you have a finite number of moves and the game eventually ends. Instead of blindly exploring, MCTS builds a search tree, focusing its simulation power on the moves that look most promising, while still checking out less-explored options now and then.
+
+So, rather than trying to calculate exact values for every state and action in the full MDP, we use MCTS to get a good approximation. It estimates the quality of taking an action 'a' from a state 's' (let's call this $Q(s,a)$) by running many simulated games down the tree. After enough simulations, the action MCTS picks from the current state is a solid approximation of the best possible move, giving us something close to an optimal policy ($\epsilon$-optimal) without needing to solve the whole MDP explicitly.
+
+Here’s the basic loop MCTS runs over and over to build its search tree:
+
+\begin{itemize}
+    \item \textbf{Selection:} Start at the root (the current game state). Move down the tree by picking child nodes that look good. We use a rule like UCT (Upper Confidence bounds applied to Trees) to balance choosing nodes we know are good (exploitation) versus nodes we haven't tried much (exploration). Keep going until we hit a node at the edge of our current tree (a leaf node).
+    \item \textbf{Expansion:} If the leaf node isn't a game-over state, add one or more new child nodes representing moves we haven't explored yet from this state. Pick one of these new nodes.
+    \item \textbf{Simulation (Rollout):} From this new node, play out the rest of the game randomly (or using some simple strategy) until it ends (win, lose, or draw). This quick playthrough gives us an idea of how good this new node (and the path to it) might be.
+    \item \textbf{Backpropagation:} Take the result from the simulation (win/loss/draw) and update the statistics (like win counts and visit counts) of all the nodes visited on the way back up from the new node to the root. This helps refine the tree's estimates for the next iteration.
+\end{itemize}
+
+We let MCTS run this loop many times. Once we're out of time or have run enough iterations, we look at the children of the very first node (our starting state) and pick the move that leads to the child with the best stats (usually the highest win rate or the most visited). This is the move MCTS recommends for our current situation in the Blackjack game.
+
+Let
+\begin{itemize}
+    \item State \(s=(H, U, X, s_{\mathrm{split}})\), where:
+    \item \begin{itemize}[leftmargin=1.5cm]
+\item \(H\): Player hand (multiset of ranks)
+\item \(U\): Dealer up\-card
+\item \(X=(X_r)_{r\in R}\): Remaining card counts
+\item \(s_{\mathrm{split}}\in\{0,1,2,3\}\): Splits remaining
+    \item \end{itemize}
+    \item Actions \(A(s)=\{\mathrm{Stand},\mathrm{Hit},\mathrm{Double}\}\) plus \(\mathrm{Split}\) if allowed.
+\end{itemize}
+
+\subsection*{Node Statistics}
+For each node \(s\) and action \(a\in A(s)\):
+\begin{itemize}[leftmargin=1.5cm]
+  \item \(N(s)\): visits of state \(s\)
+  \item \(N(s,a)\): times action \(a\) taken
+  \item \(W(s,a)\): total reward from those simulations
+  \item \(Q(s,a)=W(s,a)/N(s,a)\): average action value
+\end{itemize}
+
+\subsection*{Algorithm Phases}
+\subsubsection*{Selection}
+Recursively select
+\[
+ a^* = \arg\max_{a\in A(s)} \left[ Q(s,a) + c\sqrt{\frac{\ln N(s)}{N(s,a)}} \right]
+\]
+until leaf or unexpanded node.
+
+\subsubsection*{Expansion}
+Add new node \(s_L\) with all \(N(s_L)=N(s_L,a)=W(s_L,a)=0\), expand one action to child.
+
+\subsubsection*{Simulation (Rollout)}
+From new node, play rollout policy \(\pi_{\text{rollout}}\) to terminal, collect reward
+\(G=g(\text{player total},\text{dealer outcome})\).
+
+\subsubsection*{Backpropagation}
+For each visited \((s,a)\) in path:
+\[
+ N(s)\leftarrow N(s)+1,\quad N(s,a)\leftarrow N(s,a)+1,\quad W(s,a)\leftarrow W(s,a)+G,\quad Q(s,a)=\frac{W(s,a)}{N(s,a)}.
+\]
+
+\subsection*{Deck Integration}
+Use exact draw probabilities:
+\[\Pr(r)=\frac{X_r}{N},\quad X\to X^{(-r)},\quad N\to N-1.\]
+Actions map to MDP transitions: Hit = sample one card, Stand = terminal + dealer simulation, Double = one draw then stand, Split = two subtrees.
+
+\subsection*{Decision Rule}
+After \(M\) iterations,
+\[
+ \hat Q(s_0,a)=\frac{W(s_0,a)}{N(s_0,a)},\quad a^*=\arg\max_a \hat Q(s_0,a).
+\]
+This action approximates one that maximizes the true $Q^*(s_0,a$) in the full MDP
+
+\subsection*{Limitations}
+\begin{itemize}[leftmargin=1.5cm]
+  \item Memory grows with visited nodes (much smaller than full state space).  
+  \item Time per iteration is tree depth + rollout length.  
+  \item With \(M\to\infty\) and UCT, MCTS converges to optimal action.  
+\end{itemize}
+
+\end{document}
+
+
+\section*{\bf Acknowledgments (optional)}
+\label{sec:ACKNOWLEDGMENTS}
+The authors would like to thank XXX and YYY for their helpful feedback.
+
+\section*{\bf Funding (optional)}
+\label{sec:FUNDING}
+This work was supported by the XXX agency (grant number: XXX).
+
+\section*{\bf Availability of data and software code (optional)}
+\label{sec:AVAILABILITY}
+Our software code is available at the following URL: XXX.
+\newline
+\indent Our dataset is available at the following URL: XXX.
+
+
+\footnotesize
+\bibliographystyle{unsrt}
+\bibliography{bibliography_CIBB_file.bib} 
+\normalsize
+
+\end{document}
