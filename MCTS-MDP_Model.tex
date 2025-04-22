@@ -76,7 +76,7 @@ Let:
   \item $D \in \mathbb{N}$: the number of decks in the shoe
 \end{itemize}
 
-The initial count of cards of rank <span class="math-inline">r</span> in the shoe is
+The initial count of cards of rank $r$ in the shoe is
 \[
   x_r^{(0)} = D \cdot m_r, \quad r\in R,
 \]
@@ -89,13 +89,13 @@ Let
 \[
   O = H \cup \{U\} \cup P
 \]
-be the multiset of all observed cards. 
-For each rank <span class="math-inline">r</span>, define
+be the multiset of all observed cards.
+For each rank $r$, define
 \[
-  \Delta_r = \bigl|\{c \in O : \mathrm{rank}(c)=r\}\bigr|,
+  \Delta_r = |\{c \in O : \mathrm{rank}(c)=r\}|,
 \]
-i.e., the number of cards of rank <span class="math-inline">r</span> removed from the shoe.
-Then the remaining count of rank <span class="math-inline">r</span> is
+i.e., the number of cards of rank $r$ removed from the shoe.
+Then the remaining count of rank $r$ is
 \[
   X_r = x_r^{(0)} - \Delta_r,
 \]
@@ -103,12 +103,11 @@ and the total remaining cards is
 \[
   N = \sum_{r\in R} X_r = 52D - |O|.
 \]
-
 \subsubsection{Probability of Drawing Rank Value}
 
-Since draws are without replacement and the remaining cards are identically distributed, the probability that the next card has rank <span class="math-inline">r</span> given the current state <span class="math-inline">\(H,U,P\)</span> is
+Since draws are without replacement and the remaining cards are identically distributed, the probability that the next card has rank $r$ given the current state $(H,U,P)$ is
 \[
-  \mathbb{P}\bigl(\mathrm{rank}(\text{next card}) = r \mid H, U, P\bigr)
+  \mathbb{P}(\mathrm{rank}(\text{next card}) = r \mid H, U, P)
   = \frac{X_r}{N}.
 \]
 
@@ -174,18 +173,17 @@ Update your hand to \(H \cup \{r\}\). Choose the best action given the same numb
         \label{eq:EV_DOUBLE}
     \end{equation}
 
-    \item \textbf{Splitting} (if <span class="math-inline">H \= \\\{r, r\\\}</span> and <span class="math-inline">σ \\geq 1</span>)
+\item \textbf{Splitting} (if $H = \{r, r\}$ and $\sigma \geq 1$)
 
-    Let <span class="math-inline">X\_\{r\_2\}^\{\(\-r\_1\)\}</span> denote the updated count of <span class="math-inline">r\_2</span> after removing <span class="math-inline">r\_1</span> from the deck. 
-    \begin{equation}
-        \mathrm{EV}_{\text{split}}(H = \{r, r\}, σ  ) = \sum_{r_1 \in R} \sum_{r_2 \in R} \frac{X_{r_1}}{N} \cdot \frac{X_{r_2}^{(-r_1)}}{N - 1} \cdot \left[ \mathrm{EV}^*(\{r, r_1\}, σ   - 1) + \mathrm{EV}^*(\{r, r_2\}, σ   - 1) \right]
-        \label{eq:EV_SPLIT}
-    \end{equation}
-\({X_{r_2}^{(-r_1)}}\) is the count of \(r_2\) after removing the \(r_1\) drawn from the first split.
-You draw 2 new cards, which couple with <span class="math-inline">r\_1</span> and <span class="math-inline">r\_2</span> separately to form 2 new hands: a right hand \( \{r_1, r\}\) and left hand \( \{r_2, r\}\).
-Each hand is played optimally with <span class="math-inline">σ\-1</span> remaining splits. Since you now have 2 hands, their expected values are added together.
+  Let $X_{r_2}^{(-r_1)}$ denote the updated count of $r_2$ after removing $r_1$ from the deck.
+  \begin{equation}
+    \mathrm{EV}_{\text{split}}(H = \{r, r\}, \sigma ) = \sum_{r_1 \in R} \sum_{r_2 \in R} \frac{X_{r_1}}{N} \cdot \frac{X_{r_2}^{(-r_1)}}{N - 1} \cdot \left[ \mathrm{EV}^*(\{r, r_1\}, \sigma - 1) + \mathrm{EV}^*(\{r, r_2\}, \sigma - 1) \right]
+    \label{eq:EV_SPLIT}
+  \end{equation}
+  $X_{r_2}^{(-r_1)}$ is the count of $r_2$ after removing the $r_1$ drawn from the first split.
+  You draw 2 new cards, which couple with $r_1$ and $r_2$ separately to form 2 new hands: a right hand $\{r_1, r\}$ and left hand $\{r_2, r\}$.
+  Each hand is played optimally with $\sigma - 1$ remaining splits. Since you now have 2 hands, their expected values are added together.
 \end{enumerate}
-
 \subsubsection*{Optimal Action Value}
 
 At every game state we choose the expected value that maximizes our return
@@ -276,6 +274,15 @@ The expected value for each action can be given as:
   \[
     Q(s, \mathrm{Double}) = \sum_{r \in R} \frac{X_r}{N} \cdot 2 \sum_{y=17}^{22} P_D(y \mid U, X)\; g(v(H \cup \{r\}), y)
   \]
+  \item \textbf{Split:}
+  \begin{align*}
+    Q(s, \mathrm{Split}) =
+    \sum_{r_1, r_2 \in R} & \frac{X_{r_1}}{N} \cdot \frac{X^{(-r_1)}_{r_2}}{N - 1} \\
+    & \times \left[
+      V^*(\{r, r_1\}, U, X^{(-\{r, r_1\})}, s_{\text{split}}-1)
+      + V^*(\{r, r_2\}, U, X^{(-\{r, r_2\})}, s_{\text{split}}-1)
+    \right]
+  \end{align*}
 \end{itemize}
 
 \subsection{Steps to Solve with Dynamic Programming}
