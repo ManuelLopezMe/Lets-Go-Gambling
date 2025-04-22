@@ -65,14 +65,15 @@ As the game continues and we continue draw more cards, we gain more information 
 This is what Bayesian Probability is about, updating our beliefs as new information comes to light. [cite: 13]
 
 \subsubsection{Formulation}
+
 Let:
-    \begin{itemize}
-  \item <span class="math-inline">H</span>: the player's current hand (multiset of ranks)
-  \item <span class="math-inline">U</span>: the dealer's upcard
-  \item <span class="math-inline">P</span>: multiset of all cards dealt so far (player, dealer, past rounds)
-  \item <span class="math-inline">R \= \\\{\\mathrm\{A\},2,3,\\dots,10,\\mathrm\{J\},\\mathrm\{Q\},\\mathrm\{K\}\\\}</span>: set of ranks
-  \item <span class="math-inline">m\_r \= 4</span>, the number of cards of rank <span class="math-inline">r</span> per deck, for each <span class="math-inline">r\\in R</span>
-  \item <span class="math-inline">D\\in\\mathbb\{N\}</span>: number of decks in the shoe
+\begin{itemize}
+  \item $H$: the player's current hand (a multiset of card ranks)
+  \item $U$: the dealer's upcard
+  \item $P$: the multiset of all cards dealt so far (including player's cards, dealer's cards, and previous rounds)
+  \item $R = \{\mathrm{A}, 2, 3, \dots, 10, \mathrm{J}, \mathrm{Q}, \mathrm{K}\}$: the set of card ranks
+  \item $m_r = 4$: the number of cards of rank $r$ per deck, for each $r \in R$
+  \item $D \in \mathbb{N}$: the number of decks in the shoe
 \end{itemize}
 
 The initial count of cards of rank <span class="math-inline">r</span> in the shoe is
