@@ -45,21 +45,9 @@ def simulate_action(state, action):
         return (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
 
 def is_terminal(state):
-    """
-    Returns True if the state is terminal (player busts, stands, or after double).
-    State: (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
-    """
     player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = state
-    hand = player_hands[current_hand_idx]
-    player_value = PlayHand(hand, dealer_hand, deck).compute_value()
-
-    if player_value >= 21:
-        return True
-    # Check for stand or double in action history
-    elif action_history and (action_history[-1] == "stand" or action_history[-1] == "double"):
-        return True
-    else:
-        return False
+    # Terminal if we've finished all hands
+    return current_hand_idx >= len(player_hands)
 
 def get_legal_actions(state):
     """
@@ -77,32 +65,42 @@ def get_legal_actions(state):
     return actions
 
 def rollout(state):
-    """
-    Simulate a random playout from the given state until terminal, returning the final reward.
-    Uses a basic strategy for the player, and dealer plays out according to rules.
-    """
     player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = copy.deepcopy(state)
+    rewards = []
+    while current_hand_idx < len(player_hands):
+        # Play out this hand
+        while True:
+            hand = player_hands[current_hand_idx]
+            actions = get_legal_actions((player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history))
+            action = rollout_policy(hand, dealer_hand[0], actions)
+            player_hands, current_hand_idx_, dealer_hand, deck, splits_remaining, action_history = simulate_action(
+                (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history), action
+            )
+            # If we moved to next hand, break
+            if current_hand_idx_ != current_hand_idx:
+                current_hand_idx = current_hand_idx_
+                break
+            # If terminal for this hand, break
+            if action in ("stand", "double") or Hand(hand).compute_value() >= 21:
+                break
+        current_hand_idx += 1
 
-    while not is_terminal((player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)):
-        actions = get_legal_actions((player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history))
-        action = rollout_policy(player_hands[current_hand_idx], dealer_hand[0], actions)  # Pass the first dealer card
-        player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = simulate_action(
-            (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history), action
-        )
-
-    player_value = Hand(player_hands[current_hand_idx], dealer_hand, deck).compute_value()
-    dealer_value = PlayHand(None, dealer_hand, deck).dealer_turn()  # Use dealer_turn from PlayHand
-    # Payoff: +1 win, 0 draw, -1 lose
-    if player_value > 21:
-        return -1
-    elif dealer_value > 21:
-        return 1
-    elif player_value > dealer_value:
-        return 1
-    elif player_value < dealer_value:
-        return -1
-    else:
-        return 0
+    # Dealer plays out
+    dealer_value = PlayHand(None, dealer_hand, deck).dealer_turn()
+    # Score each hand
+    for hand in player_hands:
+        player_value = Hand(hand, dealer_hand, deck).compute_value()
+        if player_value > 21:
+            rewards.append(-1)
+        elif dealer_value > 21:
+            rewards.append(1)
+        elif player_value > dealer_value:
+            rewards.append(1)
+        elif player_value < dealer_value:
+            rewards.append(-1)
+        else:
+            rewards.append(0)
+    return sum(rewards) / len(rewards)  # or sum(rewards) if you want total
 
 def rollout_policy(player_hand, dealer_upcard, actions):
     """
