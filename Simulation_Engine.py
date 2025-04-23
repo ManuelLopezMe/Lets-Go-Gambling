@@ -142,6 +142,6 @@ class SimGame:
 
 if __name__ == "__main__":
     # Play with the MCTS-MDP agent
-    game = PlayGame(num_simulations=1000, mcts_c=1.41) # c should = sqrt(2) when payouts are between the range [0,1]
+    game = SimGame(num_simulations=1000, mcts_c=1.41) # c should = sqrt(2) when payouts are between the range [0,1]
     game.play_game()
     print("Thanks for playing!")
