@@ -2,6 +2,7 @@ from Game_Engine import PlayHand
 from MCTS_MDP_Agent import *
 from DeckHelper import *
 from metrics import *
+import json
 
 # A copy of the game engine file adapted to run on our MCTS-MDP agent
 class SimGame:
@@ -181,9 +182,9 @@ if __name__ == "__main__":
         all_simulation_data.extend(game.simulation_results) # Collect results from this run
 
     # Save the collected data
-    import json
-    with open('blackjack_simulation_results.json', 'w') as f:
+    filename=input("Save file as: ")+'.json'
+    with open(filename, 'w') as f:
         json.dump(all_simulation_data, f, indent=4)
 
-    print(f"Finished {num_simulation_runs} simulation runs. Results saved to blackjack_simulation_results.json")
+    print(f"Finished {num_simulation_runs} simulation runs. Results saved to {filename}")
 
