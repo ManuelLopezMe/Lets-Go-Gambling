@@ -1,0 +1,19 @@
+[
+    {
+        "final_bankroll": 55,
+        "rounds_played": 10,
+        "initial_bankroll": 100,
+        "round_outcomes": [
+            -5,
+            -5,
+            -5,
+            0,
+            5,
+            5,
+            -5,
+            20,
+            5,
+            -10
+        ]
+    }
+]

@@ -4,7 +4,6 @@ from DeckHelper import *
 
 
 class PlayGame:
-
     def __init__(self):
         self.active_deck = None  # Initialize in __init__
         self.rounds_played = 0  # Initialize here
@@ -35,8 +34,8 @@ class PlayGame:
     def _check_reshuffle(self):
         """Reshuffles the deck if needed."""
         if len(self.active_deck.game_deck()) <= round(
-            len(self.active_deck.all_cards()) * 0.2
-        ):  # Use all_cards instead of shuffle()
+            len(self.active_deck.all_cards()) * 0.2 # reshuffle after 20% of the deck has been played
+        ):
             self.active_deck.shuffle()
 
     def play_round(self, wager, player_hand, dealer_hand):
