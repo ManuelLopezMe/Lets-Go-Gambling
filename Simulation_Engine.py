@@ -38,34 +38,36 @@ class SimGame:
     def play_round(self, wager, player_hand, dealer_hand):
         player_value = Hand(player_hand).compute_value()
         dealer_value = Hand(dealer_hand).compute_value()
-        hand_results = [] 
-        hands_queue = [(player_hand, wager, [])]  # Add action_history to the queue
-
+        hand_results = []
+        # Assume max 3 splits (4 hands total)
+        max_splits = 3
+        hands_queue = [(player_hand, wager, max_splits, [])]  # (hand, wager, splits_remaining, action_history)
 
         if player_value == 21:
             print("Blackjack! You win!")
             return wager
 
-        hands_queue = [(player_hand, wager)]
         while hands_queue:
-            current_hand, current_wager = hands_queue.pop(0)
+            current_hand, current_wager, splits_remaining, action_history = hands_queue.pop(0)
             player_value = Hand(current_hand).compute_value()
 
             while True:
-                # Pass action history to get_player_action
-                action = self.get_player_action(current_hand, dealer_hand, self.active_deck.game_deck(), 1) # splits_remaining hardcoded to 1
-                action_history.append(action) # Keep track of the actions
+                action = self.get_player_action(
+                    [current_hand], 0, dealer_hand, self.active_deck.game_deck(), splits_remaining
+                )
+                action_history = action_history + [action]  # Track actions
+
                 if action == "hit":
                     player_value = PlayHand(
                         current_hand, None, self.active_deck.game_deck()
                     ).player_turn(action)
                     if player_value > 21:
                         print(f"You busted with {current_hand}!")
-                        hand_results.append(-current_wager)
+                        hand_results.append((-current_wager, action_history))
                         break
                 elif action == "stand":
                     print(f"Standing with {current_hand}.")
-                    hand_results.append(0)
+                    hand_results.append((0, action_history))
                     break
                 elif action == "double":
                     current_wager *= 2
@@ -74,36 +76,48 @@ class SimGame:
                     ).player_turn(action)
                     if player_value > 21:
                         print(f"You busted with {current_hand}!")
-                        hand_results.append(-current_wager)
+                        hand_results.append((-current_wager, action_history))
                     else:
                         print(f"Standing with {current_hand}.")
+                        hand_results.append((0, action_history))
                     break
                 elif (
                     action == "split"
                     and len(current_hand) == 2
                     and current_hand[0] == current_hand[1]
-                    and len(hand_results) + len(hands_queue) < 4
+                    and splits_remaining > 0
                 ):
+                    # Split into two hands
                     right_hand = [current_hand.pop()]
                     right_hand.append(self.active_deck.game_deck().pop())
                     left_hand = current_hand
                     left_hand.append(self.active_deck.game_deck().pop())
                     print(f"Right hand: {right_hand}")
                     print(f"Left hand: {left_hand}")
-                    hands_queue.append((right_hand, current_wager, action_history + ["split_right"]))  # Append "split_right"
-                    hands_queue.append((left_hand, current_wager, action_history + ["split_left"]))    # Append "split_left"
+                    # Each split hand gets one fewer split remaining
+                    hands_queue.append((right_hand, current_wager, splits_remaining - 1, action_history + ["split_right"]))
+                    hands_queue.append((left_hand, current_wager, splits_remaining - 1, action_history + ["split_left"]))
                     break
                 else:
                     print("Invalid action. Please choose hit, stand, double, or split.")
 
         dealer_value = PlayHand(None, dealer_hand, self.active_deck.game_deck()).dealer_turn()
 
-        payouts = []  
-        for current_hand, current_wager in hands_queue:
-            player_value = Hand(current_hand).compute_value()
-            payouts.append(self._determine_payout(player_value, dealer_value, current_wager, "stand"))
+        payouts = []
+        for result, action_history in hand_results:
+            # If result is already a payout (bust/double bust), use it
+            if result != 0:
+                payouts.append(result)
+            else:
+                # Otherwise, determine payout based on final hand vs dealer
+                player_value = Hand(current_hand).compute_value()
+                payouts.append(self._determine_payout(player_value, dealer_value, current_wager, action_history[-1]))
 
-        return sum(hand_results + payouts)
+        # Optionally, print action histories for each hand
+        for idx, (result, action_history) in enumerate(hand_results):
+            print(f"Hand {idx+1} actions: {action_history}")
+
+        return sum(payouts)
 
     def _determine_payout(self, player_value, dealer_value, wager, action):
 
