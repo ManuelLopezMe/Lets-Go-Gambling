@@ -171,7 +171,19 @@ class SimGame:
         print(f"Simulation finished. Final bankroll: ${self.bankroll}")
 
 if __name__ == "__main__":
-    # Run simulation
-    game = SimGame(num_simulations=1000, mcts_c=1.41) # c should = sqrt(2) when payouts are between the range [0,1]
-    game.play_game()
-    print("Thanks for playing!")
+    num_simulation_runs = 1 # Define how many times to run the game simulation
+    all_simulation_data = []
+
+    for i in range(num_simulation_runs): # Create a new game instance for each run
+        print(f"Running simulation run {i+1}")
+        game = SimGame(num_simulations=1000, mcts_c=1.41) 
+        game.play_game()
+        all_simulation_data.extend(game.simulation_results) # Collect results from this run
+
+    # Save the collected data
+    import json
+    with open('blackjack_simulation_results.json', 'w') as f:
+        json.dump(all_simulation_data, f, indent=4)
+
+    print(f"Finished {num_simulation_runs} simulation runs. Results saved to blackjack_simulation_results.json")
+
