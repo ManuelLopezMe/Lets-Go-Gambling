@@ -5,56 +5,53 @@ from metrics import Hand
 
 class MCTSNode:
     def __init__(self, state, parent=None):
-        self.state = state  # (player_hand, dealer_hand, deck, splits_remaining, action_history)
+        self.state = state  # (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
         self.parent = parent
         self.children = {}
         self.visits = 0
         self.value = 0
-        self.action_history = state[4]  # Keep track of actions taken to reach this state
+        self.action_history = state[5]  # Keep track of actions taken to reach this state
 
 def simulate_action(state, action):
-    """
-    Given a state and action, returns the next state after applying the action.
-    State: (player_hand, dealer_hand, deck, splits_remaining, action_history)
-    Action: "hit", "stand", "double", "split"
-    """
-    player_hand, dealer_hand, deck, splits_remaining, action_history = copy.deepcopy(state)
-    action_history = action_history + [action]  # Append the current action
+    player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = copy.deepcopy(state)
+    action_history = action_history + [action]
+    hand = player_hands[current_hand_idx]
 
     if action == "hit":
-        if len(deck) == 0:
-            return (player_hand, dealer_hand, deck, splits_remaining, action_history)  # No cards left
-        player_hand.append(deck.pop())
-        return (player_hand, dealer_hand, deck, splits_remaining, action_history)
+        hand.append(deck.pop())
+        player_hands[current_hand_idx] = hand
+        return (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
 
-    elif action == "stand":
-        # No change to player hand
-        return (player_hand, dealer_hand, deck, splits_remaining, action_history)
-
-    elif action == "double":
-        if len(deck) == 0:
-            return (player_hand, dealer_hand, deck, splits_remaining, action_history)
-        player_hand.append(deck.pop())
-        return (player_hand, dealer_hand, deck, splits_remaining, action_history)
+    elif action == "stand" or action == "double":
+        # Move to next hand if any
+        if current_hand_idx + 1 < len(player_hands):
+            return (player_hands, current_hand_idx + 1, dealer_hand, deck, splits_remaining, action_history)
+        else:
+            return (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
 
     elif action == "split":
-        if len(player_hand) == 2 and player_hand[0] == player_hand[1] and splits_remaining > 0 and len(deck) >= 2:
-            left_hand = [player_hand[0], deck.pop()]
-            right_hand = [player_hand[1], deck.pop()]
-            return (left_hand, right_hand, dealer_hand, deck, splits_remaining - 1, action_history) # Changed to return both
+        card = hand[0]
+        if len(hand) == 2 and hand[0] == hand[1] and splits_remaining > 0 and len(deck) >= 2:
+            # Replace current hand with two new hands
+            new_hand1 = [card, deck.pop()]
+            new_hand2 = [card, deck.pop()]
+            player_hands.pop(current_hand_idx)
+            player_hands.insert(current_hand_idx, new_hand2)
+            player_hands.insert(current_hand_idx, new_hand1)
+            return (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining - 1, action_history)
         else:
-                raise ValueError("Split not allowed")
-                return (player_hand, dealer_hand, deck, splits_remaining, action_history)
+            raise ValueError("Split not allowed")
     else:
-        return (player_hand, dealer_hand, deck, splits_remaining, action_history)
+        return (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
 
 def is_terminal(state):
     """
     Returns True if the state is terminal (player busts, stands, or after double).
-    State: (player_hand, dealer_hand, deck, splits_remaining, action_history)
+    State: (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
     """
-    player_hand, dealer_hand, deck, splits_remaining, action_history = state
-    player_value = PlayHand(player_hand, dealer_hand, deck).compute_value()
+    player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = state
+    hand = player_hands[current_hand_idx]
+    player_value = PlayHand(hand, dealer_hand, deck).compute_value()
 
     if player_value >= 21:
         return True
@@ -67,14 +64,15 @@ def is_terminal(state):
 def get_legal_actions(state):
     """
     Returns a list of legal actions for the given state.
-    State: (player_hand, deck, splits_remaining, action_history)
+    State: (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
     Actions: "hit", "stand", "double", "split" (if allowed)
     """
-    player_hand, deck, splits_remaining, action_history = state
+    player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = state
+    hand = player_hands[current_hand_idx]
     actions = ["hit", "stand"]
-    if len(player_hand) == 2:
+    if len(hand) == 2:
         actions.append("double")
-        if player_hand[0] == player_hand[1] and splits_remaining > 0 and len(deck) >= 2:
+        if hand[0] == hand[1] and splits_remaining > 0 and len(deck) >= 2:
             actions.append("split")
     return actions
 
@@ -83,17 +81,17 @@ def rollout(state):
     Simulate a random playout from the given state until terminal, returning the final reward.
     Uses a basic strategy for the player, and dealer plays out according to rules.
     """
-    player_hand, dealer_hand, deck, splits_remaining, action_history = copy.deepcopy(state)
+    player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = copy.deepcopy(state)
 
-    while not is_terminal((player_hand, dealer_hand, deck, splits_remaining, action_history)):
-        actions = get_legal_actions((player_hand, dealer_hand, deck, splits_remaining, action_history))
-        action = rollout_policy(player_hand, dealer_hand[0], actions)  # Pass the first dealer card
-        player_hand, dealer_hand, deck, splits_remaining, action_history = simulate_action(
-            (player_hand, dealer_hand, deck, splits_remaining, action_history), action
+    while not is_terminal((player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)):
+        actions = get_legal_actions((player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history))
+        action = rollout_policy(player_hands[current_hand_idx], dealer_hand[0], actions)  # Pass the first dealer card
+        player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = simulate_action(
+            (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history), action
         )
 
-    player_value = Hand(player_hand, dealer_hand, deck).compute_value()
-    dealer_value = PlayHand(None, dealer_hand, deck).dealer_turn()  #  Use dealer_turn from PlayHand
+    player_value = Hand(player_hands[current_hand_idx], dealer_hand, deck).compute_value()
+    dealer_value = PlayHand(None, dealer_hand, deck).dealer_turn()  # Use dealer_turn from PlayHand
     # Payoff: +1 win, 0 draw, -1 lose
     if player_value > 21:
         return -1
@@ -110,13 +108,13 @@ def rollout_policy(player_hand, dealer_upcard, actions):
     """
     A basic blackjack strategy for the rollout phase.
     """
-    player_value = Hand(player_hand).compute_value() # changed
+    player_value = Hand(player_hand).compute_value()
     dealer_upcard_value = Hand([dealer_upcard]).compute_value()
 
     if "split" in actions and player_hand[0] == player_hand[1]:
         if player_hand[0] in [2, 3, 4, 5, 6, 7] and dealer_upcard_value in range(2, 8):
             return "split"
-        elif player_hand[0] in [8] :
+        elif player_hand[0] in [8]:
             return "split"
         elif player_hand[0] == 9 and dealer_upcard_value in [3,4,5,6,8,9]:
             return "split"
@@ -133,7 +131,7 @@ def rollout_policy(player_hand, dealer_upcard, actions):
             return "stand"
         else:
             return "hit"
-    elif player_value == 17 :
+    elif player_value == 17:
         return "stand"
     elif player_value > 17:
         return "stand"
@@ -145,7 +143,7 @@ def mcts_search(root_state, num_simulations, c=1.41):
     Performs MCTS search from the given root state.
 
     Args:
-        root_state: The initial game state (player_hand, dealer_hand, deck, splits_remaining, action_history).
+        root_state: The initial game state (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history).
         num_simulations: The number of MCTS simulations to perform.
         c: The exploration/exploitation balance parameter.
     Returns:
@@ -206,12 +204,12 @@ class SimAgent:
         self.num_simulations = num_simulations
         self.c = c
 
-    def get_action(self, player_hand, dealer_hand, deck, splits_remaining):
+    def get_action(self, player_hands, current_hand_idx, dealer_hand, deck, splits_remaining):
         """
         Gets the best action from the MCTS agent.
         """
         # Initialize action history
         action_history = []
-        root_state = (player_hand, dealer_hand, deck, splits_remaining, action_history)
+        root_state = (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
         best_action = mcts_search(root_state, self.num_simulations, self.c)
         return best_action
