@@ -1,6 +1,6 @@
 import numpy as np
-from metrics import *
-from DeckHelper import *
+from Helpers.MetricsHelper import *
+from Helpers.DeckHelper import *
 
 
 class PlayGame:
