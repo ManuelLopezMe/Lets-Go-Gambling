@@ -89,7 +89,7 @@ def rollout(state):
     dealer_value = PlayHand(None, dealer_hand, deck).dealer_turn()
     # Score each hand
     for hand in player_hands:
-        player_value = Hand(hand, dealer_hand, deck).compute_value()
+        player_value = Hand(hand).compute_value()
         if player_value > 21:
             rewards.append(-1)
         elif dealer_value > 21:
