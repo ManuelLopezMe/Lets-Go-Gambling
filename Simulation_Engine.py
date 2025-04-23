@@ -14,6 +14,7 @@ class SimGame:
         self.bankroll = 100
         self.num_rounds = 10
         self.agent = SimAgent(num_simulations, mcts_c)
+        self.simulation_results = [] 
 
     def _deal_cards(self):
         player_hand = self.active_deck.deal_hand()
@@ -111,7 +112,7 @@ class SimGame:
             else:
                 # Otherwise, determine payout based on final hand vs dealer
                 player_value = Hand(current_hand).compute_value()
-                payouts.append(self._determine_payout(player_value, dealer_value, current_wager, action_history[-1]))
+                payouts.append(self._determine_payout(player_value, dealer_value, current_wager, action_history[-1])) 
 
         # Optionally, print action histories for each hand
         for idx, (result, action_history) in enumerate(hand_results):
@@ -137,6 +138,9 @@ class SimGame:
         self.active_deck = Deck(num_decks)
         self.active_deck.shuffle()
 
+        initial_bankroll = self.bankroll # Store initial bankroll for this simulation run
+        round_outcomes_list = [] # Store outcome for each round in this run
+
         while self.rounds_played < self.num_rounds and self.bankroll > 0:
             wager = self._get_wager()
 
@@ -149,12 +153,22 @@ class SimGame:
                     Player=player_hand, dealer=dealer_hand[0]
                 )
             )
+            payout =  self.play_round(wager, player_hand, dealer_hand)
+            self.bankroll += payout
 
-            self.bankroll += self.play_round(wager, player_hand, dealer_hand)
+            round_outcomes_list.append(payout) # Record payout for this round
+
             self.rounds_played += 1
             self._check_reshuffle()
-
-        print(f"Game over! Final bankroll: ${self.bankroll}")
+        
+        self.simulation_results.append({
+            'final_bankroll': self.bankroll,
+            'rounds_played': self.rounds_played,
+            'initial_bankroll': initial_bankroll,
+            'round_outcomes': round_outcomes_list # Store all round payouts
+            # Add other metrics here
+        })
+        print(f"Simulation finished. Final bankroll: ${self.bankroll}")
 
 if __name__ == "__main__":
     # Run simulation
