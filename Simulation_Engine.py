@@ -39,6 +39,8 @@ class SimGame:
         player_value = Hand(player_hand).compute_value()
         dealer_value = Hand(dealer_hand).compute_value()
         hand_results = [] 
+        hands_queue = [(player_hand, wager, [])]  # Add action_history to the queue
+
 
         if player_value == 21:
             print("Blackjack! You win!")
@@ -50,8 +52,9 @@ class SimGame:
             player_value = Hand(current_hand).compute_value()
 
             while True:
-                action = input(f"Hit, stand, double, or split? ({current_hand}): ").lower()
-
+                # Pass action history to get_player_action
+                action = self.get_player_action(current_hand, dealer_hand, self.active_deck.game_deck(), 1) # splits_remaining hardcoded to 1
+                action_history.append(action) # Keep track of the actions
                 if action == "hit":
                     player_value = PlayHand(
                         current_hand, None, self.active_deck.game_deck()
@@ -62,7 +65,7 @@ class SimGame:
                         break
                 elif action == "stand":
                     print(f"Standing with {current_hand}.")
-                    hand_results.append(0)  # No win/loss for standing
+                    hand_results.append(0)
                     break
                 elif action == "double":
                     current_wager *= 2
@@ -79,7 +82,7 @@ class SimGame:
                     action == "split"
                     and len(current_hand) == 2
                     and current_hand[0] == current_hand[1]
-                    and len(hand_results) + len(hands_queue) < 4 
+                    and len(hand_results) + len(hands_queue) < 4
                 ):
                     right_hand = [current_hand.pop()]
                     right_hand.append(self.active_deck.game_deck().pop())
@@ -87,9 +90,8 @@ class SimGame:
                     left_hand.append(self.active_deck.game_deck().pop())
                     print(f"Right hand: {right_hand}")
                     print(f"Left hand: {left_hand}")
-
-                    hands_queue.append((right_hand, current_wager))
-                    hands_queue.append((left_hand, current_wager))
+                    hands_queue.append((right_hand, current_wager, action_history + ["split_right"]))  # Append "split_right"
+                    hands_queue.append((left_hand, current_wager, action_history + ["split_left"]))    # Append "split_left"
                     break
                 else:
                     print("Invalid action. Please choose hit, stand, double, or split.")
@@ -141,7 +143,7 @@ class SimGame:
         print(f"Game over! Final bankroll: ${self.bankroll}")
 
 if __name__ == "__main__":
-    # Play with the MCTS-MDP agent
+    # Run simulation
     game = SimGame(num_simulations=1000, mcts_c=1.41) # c should = sqrt(2) when payouts are between the range [0,1]
     game.play_game()
     print("Thanks for playing!")
