@@ -35,7 +35,7 @@ class PlayHand:
             self.dealer_hand.append(self.deck.pop())
             dealer_value = Hand(self.dealer_hand).compute_value()  # Recalculate
 
-        print("Final Dealers Hand: {dealer}".format(dealer=self.dealer_hand))
+        print("Simulated Dealers Hand: {dealer}".format(dealer=self.dealer_hand))
         return dealer_value
 
 class SimGame:
