@@ -78,6 +78,9 @@ class SimGame:
         max_splits = 3
         hands_queue = [(player_hand, wager, max_splits, [])]
 
+        print(f"Player initial hand: {player_hand}, value: {player_value}")
+        print(f"Dealer initial hand: {dealer_hand}, value: {dealer_value}")
+
         if player_value == 21:
             print("Blackjack! You win!")
             return wager, node_stats
@@ -105,25 +108,31 @@ class SimGame:
                     player_value = PlayHand(
                         current_hand, None, self.active_deck.game_deck()
                     ).player_turn(action)
+                    print(f"Player hits, hand: {current_hand}, value: {player_value}")
                     if player_value > 21:
                         print(f"You busted with {current_hand}!")
                         hand_results.append((-current_wager, action_history))
                         break
                 elif action == "stand":
                     print(f"Standing with {current_hand}.")
-                    hand_results.append((0, action_history))
+                    hand_results.append((0, action_history))  # Tie results in 0 payout
                     break
                 elif action == "double":
+                    if current_wager * 2 > self.bankroll:
+                        print("Insufficient bankroll to double down.")
+                        continue
+                    
                     current_wager *= 2
                     player_value = PlayHand(
                         current_hand, None, self.active_deck.game_deck()
                     ).player_turn(action)
+                    print(f"Player doubles, hand: {current_hand}, value: {player_value}")
                     if player_value > 21:
                         print(f"You busted with {current_hand}!")
                         hand_results.append((-current_wager, action_history))
                     else:
                         print(f"Standing with {current_hand}.")
-                        hand_results.append((0, action_history))
+                        hand_results.append((current_wager, action_history))
                     break
                 elif (
                     action == "split"
@@ -146,6 +155,7 @@ class SimGame:
         # Dealer's turn
         dealer_value = PlayHand(None, dealer_hand, self.active_deck.game_deck()).dealer_turn()
         final_dealer_hand = dealer_hand[:]  # Capture the final dealer's hand
+        print(f"Dealer final hand: {final_dealer_hand}, value: {dealer_value}")
 
         payouts = []
         for result, action_history in hand_results:
@@ -153,17 +163,28 @@ class SimGame:
                 payouts.append(result)
             else:
                 player_value = Hand(current_hand).compute_value()
-                payouts.append(self._determine_payout(player_value, dealer_value, current_wager, action_history[-1]))
-
-        for idx, (result, action_history) in enumerate(hand_results):
-            print(f"Hand {idx+1} actions: {action_history}")
+                
+                # Debugging: Print action history
+                #print(f"Action history: {action_history}")
+                # Debugging: Print the last action
+                #if action_history:
+                    #last_action = action_history[-1]
+                #else:
+                    #last_action = "none"  # Handle the case where action_history is empty 
+                #print(f"Last action: {last_action}")
+                
+                payout = self._determine_payout(player_value, dealer_value, current_wager, action)
+                print(f"Player value: {player_value}, Dealer value: {dealer_value}, Wager: {current_wager}, Payout: {payout}")
+                payouts.append(payout)
 
         # Add final dealer hand and value to node statistics
         for stat in node_stats:
             stat["final_dealer_hand"] = final_dealer_hand
             stat["final_dealer_value"] = dealer_value
 
-        return sum(payouts), node_stats
+        total_payout = sum(payouts)
+        print(f"Round payout: {total_payout}")
+        return total_payout, node_stats
 
     def _determine_payout(self, player_value, dealer_value, wager, action):
 
@@ -187,10 +208,12 @@ class SimGame:
         round_outcomes_list = [] # Store outcome for each round in this run
         node_statistics = []  # Collect node statistics for all rounds
 
+        #print(f"Starting bankroll: {self.bankroll}")  # Debugging
+
         while self.rounds_played < self.num_rounds and self.bankroll > 0:
             wager = self._get_wager()
 
-            self.bankroll -= wager
+            #self.bankroll -= wager
 
             player_hand, dealer_hand = self._deal_cards()
 
@@ -201,6 +224,8 @@ class SimGame:
             )
             payout, round_node_stats = self.play_round(wager, player_hand, dealer_hand)
             self.bankroll += payout
+
+            print(f"Bankroll after round: {self.bankroll}")  # Debugging
 
             round_outcomes_list.append(payout) # Record payout for this round
             node_statistics.append(round_node_stats)  # Append node stats for this round
@@ -219,8 +244,8 @@ class SimGame:
         print(f"Simulation finished. Final bankroll: ${self.bankroll}")
 
 if __name__ == "__main__":
-    num_runs = 25
-    num_sims = 1000
+    num_runs = 2
+    num_sims = 5
     all_simulation_data = [{
         "number_of_runs": num_runs,
         "number_of_simulation_iterations": num_sims
@@ -228,7 +253,7 @@ if __name__ == "__main__":
 
     for i in range(num_runs):
         print(f"Running simulation run {i+1}")
-        game = SimGame(num_simulations=num_sims, mcts_c=1.41, num_rounds=50)
+        game = SimGame(num_simulations=num_sims, mcts_c=1.41, num_rounds=2)
         game.play_game(num_decks=2)
         all_simulation_data.extend(game.simulation_results)
 
