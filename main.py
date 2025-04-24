@@ -68,7 +68,7 @@ class SimGame:
             self.active_deck.shuffle()
 
     def get_player_action(self, player_hands, current_hand_idx, dealer_hand, deck, splits_remaining):
-        return self.agent.get_action(player_hands, current_hand_idx, dealer_hand, deck, splits_remaining)
+        return self.agent.get_action(player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, self._get_wager(), self.bankroll)
         
     def play_round(self, wager, player_hand, dealer_hand):
         player_value = Hand(player_hand).compute_value()
@@ -244,8 +244,8 @@ class SimGame:
         print(f"Simulation finished. Final bankroll: ${self.bankroll}")
 
 if __name__ == "__main__":
-    num_runs = 2
-    num_sims = 5
+    num_runs = 25
+    num_sims = 1000
     all_simulation_data = [{
         "number_of_runs": num_runs,
         "number_of_simulation_iterations": num_sims
@@ -253,11 +253,12 @@ if __name__ == "__main__":
 
     for i in range(num_runs):
         print(f"Running simulation run {i+1}")
-        game = SimGame(num_simulations=num_sims, mcts_c=1.41, num_rounds=2)
+        game = SimGame(num_simulations=num_sims, mcts_c=1.41, num_rounds=50)
         game.play_game(num_decks=2)
         all_simulation_data.extend(game.simulation_results)
 
-    filename = input("Save file as: ") + '.json'
+    #filename = input("Save file as: ") + '.json'
+    filename = 'test-run-6.json'
     with open('data/' + filename, 'w') as f:
         json.dump(all_simulation_data, f, indent=2)
 
