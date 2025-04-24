@@ -197,6 +197,7 @@ def backpropagate(node, reward):
         node.value += reward
         node = node.parent
 
+""" def print_node_statistics(node):
 class SimAgent:
     def __init__(self, num_simulations=1000, c=1.41):
         self.num_simulations = num_simulations
