@@ -68,7 +68,7 @@ class SimGame:
             self.active_deck.shuffle()
 
     def get_player_action(self, player_hands, current_hand_idx, dealer_hand, deck, splits_remaining):
-        return self.agent.get_action(player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, self._get_wager(), self.bankroll)
+        return self.agent.get_action(player_hands, current_hand_idx, dealer_hand, deck, splits_remaining)
         
     def play_round(self, wager, player_hand, dealer_hand):
         player_value = Hand(player_hand).compute_value()
