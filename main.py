@@ -35,7 +35,7 @@ class PlayHand:
             self.dealer_hand.append(self.deck.pop())
             dealer_value = Hand(self.dealer_hand).compute_value()  # Recalculate
 
-        print("Final Dealers Hand: {dealer}".format(dealer=self.dealer_hand))
+        print("Simulated Dealers Hand: {dealer}".format(dealer=self.dealer_hand))
         return dealer_value
 
 class SimGame:
@@ -68,19 +68,22 @@ class SimGame:
             self.active_deck.shuffle()
 
     def get_player_action(self, player_hands, current_hand_idx, dealer_hand, deck, splits_remaining):
-        return self.agent.get_action(player_hands, current_hand_idx, dealer_hand, deck, splits_remaining)
+        return self.agent.get_action(player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, self._get_wager(), self.bankroll)
         
     def play_round(self, wager, player_hand, dealer_hand):
         player_value = Hand(player_hand).compute_value()
         dealer_value = Hand(dealer_hand).compute_value()
         hand_results = []
-        # Assume max 3 splits (4 hands total)
+        node_stats = []  # Collect node statistics for this round
         max_splits = 3
-        hands_queue = [(player_hand, wager, max_splits, [])]  # (hand, wager, splits_remaining, action_history)
+        hands_queue = [(player_hand, wager, max_splits, [])]
+
+        print(f"Player initial hand: {player_hand}, value: {player_value}")
+        print(f"Dealer initial hand: {dealer_hand}, value: {dealer_value}")
 
         if player_value == 21:
             print("Blackjack! You win!")
-            return wager
+            return wager, node_stats
 
         while hands_queue:
             current_hand, current_wager, splits_remaining, action_history = hands_queue.pop(0)
@@ -90,31 +93,46 @@ class SimGame:
                 action = self.get_player_action(
                     [current_hand], 0, dealer_hand, self.active_deck.game_deck(), splits_remaining
                 )
-                action_history = action_history + [action]  # Track actions
+                action_history = action_history + [action]
+
+                # Collect node statistics
+                node_stats.append({
+                    "hand": current_hand,
+                    "action": action,
+                    "action_history": action_history,
+                    "player_value": player_value,
+                    "dealer_upcard": dealer_hand[0]
+                })
 
                 if action == "hit":
                     player_value = PlayHand(
                         current_hand, None, self.active_deck.game_deck()
                     ).player_turn(action)
+                    print(f"Player hits, hand: {current_hand}, value: {player_value}")
                     if player_value > 21:
                         print(f"You busted with {current_hand}!")
                         hand_results.append((-current_wager, action_history))
                         break
                 elif action == "stand":
                     print(f"Standing with {current_hand}.")
-                    hand_results.append((0, action_history))
+                    hand_results.append((0, action_history))  # Tie results in 0 payout
                     break
                 elif action == "double":
+                    if current_wager * 2 > self.bankroll:
+                        print("Insufficient bankroll to double down.")
+                        continue
+                    
                     current_wager *= 2
                     player_value = PlayHand(
                         current_hand, None, self.active_deck.game_deck()
                     ).player_turn(action)
+                    print(f"Player doubles, hand: {current_hand}, value: {player_value}")
                     if player_value > 21:
                         print(f"You busted with {current_hand}!")
                         hand_results.append((-current_wager, action_history))
                     else:
                         print(f"Standing with {current_hand}.")
-                        hand_results.append((0, action_history))
+                        hand_results.append((current_wager, action_history))
                     break
                 elif (
                     action == "split"
@@ -122,37 +140,51 @@ class SimGame:
                     and current_hand[0] == current_hand[1]
                     and splits_remaining > 0
                 ):
-                    # Split into two hands
                     right_hand = [current_hand.pop()]
                     right_hand.append(self.active_deck.game_deck().pop())
                     left_hand = current_hand
                     left_hand.append(self.active_deck.game_deck().pop())
                     print(f"Right hand: {right_hand}")
                     print(f"Left hand: {left_hand}")
-                    # Each split hand gets one fewer split remaining
                     hands_queue.append((right_hand, current_wager, splits_remaining - 1, action_history + ["split_right"]))
                     hands_queue.append((left_hand, current_wager, splits_remaining - 1, action_history + ["split_left"]))
                     break
                 else:
                     print("Invalid action. Please choose hit, stand, double, or split.")
 
+        # Dealer's turn
         dealer_value = PlayHand(None, dealer_hand, self.active_deck.game_deck()).dealer_turn()
+        final_dealer_hand = dealer_hand[:]  # Capture the final dealer's hand
+        print(f"Dealer final hand: {final_dealer_hand}, value: {dealer_value}")
 
         payouts = []
         for result, action_history in hand_results:
-            # If result is already a payout (bust/double bust), use it
             if result != 0:
                 payouts.append(result)
             else:
-                # Otherwise, determine payout based on final hand vs dealer
                 player_value = Hand(current_hand).compute_value()
-                payouts.append(self._determine_payout(player_value, dealer_value, current_wager, action_history[-1])) 
+                
+                # Debugging: Print action history
+                #print(f"Action history: {action_history}")
+                # Debugging: Print the last action
+                #if action_history:
+                    #last_action = action_history[-1]
+                #else:
+                    #last_action = "none"  # Handle the case where action_history is empty 
+                #print(f"Last action: {last_action}")
+                
+                payout = self._determine_payout(player_value, dealer_value, current_wager, action)
+                print(f"Player value: {player_value}, Dealer value: {dealer_value}, Wager: {current_wager}, Payout: {payout}")
+                payouts.append(payout)
 
-        # Optionally, print action histories for each hand
-        for idx, (result, action_history) in enumerate(hand_results):
-            print(f"Hand {idx+1} actions: {action_history}")
+        # Add final dealer hand and value to node statistics
+        for stat in node_stats:
+            stat["final_dealer_hand"] = final_dealer_hand
+            stat["final_dealer_value"] = dealer_value
 
-        return sum(payouts)
+        total_payout = sum(payouts)
+        print(f"Round payout: {total_payout}")
+        return total_payout, node_stats
 
     def _determine_payout(self, player_value, dealer_value, wager, action):
 
@@ -174,11 +206,14 @@ class SimGame:
 
         initial_bankroll = self.bankroll # Store initial bankroll for this simulation run
         round_outcomes_list = [] # Store outcome for each round in this run
+        node_statistics = []  # Collect node statistics for all rounds
+
+        #print(f"Starting bankroll: {self.bankroll}")  # Debugging
 
         while self.rounds_played < self.num_rounds and self.bankroll > 0:
             wager = self._get_wager()
 
-            self.bankroll -= wager
+            #self.bankroll -= wager
 
             player_hand, dealer_hand = self._deal_cards()
 
@@ -187,10 +222,13 @@ class SimGame:
                     Player=player_hand, dealer=dealer_hand[0]
                 )
             )
-            payout =  self.play_round(wager, player_hand, dealer_hand)
+            payout, round_node_stats = self.play_round(wager, player_hand, dealer_hand)
             self.bankroll += payout
 
+            print(f"Bankroll after round: {self.bankroll}")  # Debugging
+
             round_outcomes_list.append(payout) # Record payout for this round
+            node_statistics.append(round_node_stats)  # Append node stats for this round
 
             self.rounds_played += 1
             self._check_reshuffle()
@@ -199,28 +237,29 @@ class SimGame:
             'final_bankroll': self.bankroll,
             'rounds_played': self.rounds_played,
             'initial_bankroll': initial_bankroll,
-            'round_outcomes': round_outcomes_list # Store all round payouts
+            'round_outcomes': round_outcomes_list, # Store all round payouts
+            'node_statistics': node_statistics  # Add node statistics to results
             # Add other metrics here
         })
         print(f"Simulation finished. Final bankroll: ${self.bankroll}")
 
 if __name__ == "__main__":
-    num_runs = 25 # Define how many times to run the game simulation
-    num_sims = 1000 # how many iterations are performed
+    num_runs = 25
+    num_sims = 1000
     all_simulation_data = [{
         "number_of_runs": num_runs,
         "number_of_simulation_iterations": num_sims
-                            }]
+    }]
 
-    for i in range(num_runs): # Create a new game instance for each run
+    for i in range(num_runs):
         print(f"Running simulation run {i+1}")
-        game = SimGame(num_simulations=num_sims, mcts_c=1.41, num_rounds=50) 
-        game.play_game(num_decks=6) #most casinos use 6 decks in a shoe
-        all_simulation_data.extend(game.simulation_results) # Collect results from this run
+        game = SimGame(num_simulations=num_sims, mcts_c=1.41, num_rounds=50)
+        game.play_game(num_decks=2)
+        all_simulation_data.extend(game.simulation_results)
 
-    # Save the collected data
-    filename=input("Save file as: ")+'.json'
-    with open('data/'+filename, 'w') as f:
+    #filename = input("Save file as: ") + '.json'
+    filename = 'test-run-6.json'
+    with open('data/' + filename, 'w') as f:
         json.dump(all_simulation_data, f, indent=2)
 
     print(f"Finished {num_runs} simulation runs. Results saved to {filename}")

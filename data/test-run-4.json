@@ -1,0 +1,391 @@
+[
+  {
+    "number_of_runs": 2,
+    "number_of_simulation_iterations": 500
+  },
+  {
+    "final_bankroll": 40,
+    "rounds_played": 5,
+    "initial_bankroll": 100,
+    "round_outcomes": [
+      -5,
+      -5,
+      -10,
+      -10,
+      -5
+    ],
+    "node_statistics": [
+      [
+        {
+          "hand": [
+            "J",
+            "6",
+            "6"
+          ],
+          "action": "hit",
+          "action_history": [
+            "hit"
+          ],
+          "player_value": 16,
+          "dealer_upcard": "6",
+          "final_dealer_hand": [
+            "6",
+            "8",
+            "3"
+          ],
+          "final_dealer_value": 17
+        }
+      ],
+      [
+        {
+          "hand": [
+            "6",
+            "8",
+            "5",
+            "8"
+          ],
+          "action": "hit",
+          "action_history": [
+            "hit"
+          ],
+          "player_value": 14,
+          "dealer_upcard": "9",
+          "final_dealer_hand": [
+            "9",
+            "4",
+            "K"
+          ],
+          "final_dealer_value": 23
+        },
+        {
+          "hand": [
+            "6",
+            "8",
+            "5",
+            "8"
+          ],
+          "action": "hit",
+          "action_history": [
+            "hit",
+            "hit"
+          ],
+          "player_value": 19,
+          "dealer_upcard": "9",
+          "final_dealer_hand": [
+            "9",
+            "4",
+            "K"
+          ],
+          "final_dealer_value": 23
+        }
+      ],
+      [
+        {
+          "hand": [
+            "2",
+            "8"
+          ],
+          "action": "split",
+          "action_history": [
+            "split"
+          ],
+          "player_value": 4,
+          "dealer_upcard": "Q",
+          "final_dealer_hand": [
+            "Q",
+            "7"
+          ],
+          "final_dealer_value": 17
+        },
+        {
+          "hand": [
+            "2",
+            "4",
+            "7",
+            "10"
+          ],
+          "action": "hit",
+          "action_history": [
+            "split",
+            "split_right",
+            "hit"
+          ],
+          "player_value": 6,
+          "dealer_upcard": "Q",
+          "final_dealer_hand": [
+            "Q",
+            "7"
+          ],
+          "final_dealer_value": 17
+        },
+        {
+          "hand": [
+            "2",
+            "4",
+            "7",
+            "10"
+          ],
+          "action": "hit",
+          "action_history": [
+            "split",
+            "split_right",
+            "hit",
+            "hit"
+          ],
+          "player_value": 13,
+          "dealer_upcard": "Q",
+          "final_dealer_hand": [
+            "Q",
+            "7"
+          ],
+          "final_dealer_value": 17
+        },
+        {
+          "hand": [
+            "2",
+            "8"
+          ],
+          "action": "stand",
+          "action_history": [
+            "split",
+            "split_left",
+            "stand"
+          ],
+          "player_value": 10,
+          "dealer_upcard": "Q",
+          "final_dealer_hand": [
+            "Q",
+            "7"
+          ],
+          "final_dealer_value": 17
+        }
+      ],
+      [
+        {
+          "hand": [
+            "J",
+            "K",
+            "6"
+          ],
+          "action": "double",
+          "action_history": [
+            "double"
+          ],
+          "player_value": 20,
+          "dealer_upcard": "5",
+          "final_dealer_hand": [
+            "5",
+            "A",
+            "Q",
+            "5"
+          ],
+          "final_dealer_value": 21
+        }
+      ],
+      [
+        {
+          "hand": [
+            "5",
+            "4",
+            "3",
+            "3",
+            "7"
+          ],
+          "action": "hit",
+          "action_history": [
+            "hit"
+          ],
+          "player_value": 9,
+          "dealer_upcard": "9",
+          "final_dealer_hand": [
+            "9",
+            "10"
+          ],
+          "final_dealer_value": 19
+        },
+        {
+          "hand": [
+            "5",
+            "4",
+            "3",
+            "3",
+            "7"
+          ],
+          "action": "hit",
+          "action_history": [
+            "hit",
+            "hit"
+          ],
+          "player_value": 12,
+          "dealer_upcard": "9",
+          "final_dealer_hand": [
+            "9",
+            "10"
+          ],
+          "final_dealer_value": 19
+        },
+        {
+          "hand": [
+            "5",
+            "4",
+            "3",
+            "3",
+            "7"
+          ],
+          "action": "hit",
+          "action_history": [
+            "hit",
+            "hit",
+            "hit"
+          ],
+          "player_value": 15,
+          "dealer_upcard": "9",
+          "final_dealer_hand": [
+            "9",
+            "10"
+          ],
+          "final_dealer_value": 19
+        }
+      ]
+    ]
+  },
+  {
+    "final_bankroll": 70,
+    "rounds_played": 5,
+    "initial_bankroll": 100,
+    "round_outcomes": [
+      -5,
+      -10,
+      20,
+      -5,
+      -5
+    ],
+    "node_statistics": [
+      [
+        {
+          "hand": [
+            "3",
+            "9",
+            "J"
+          ],
+          "action": "hit",
+          "action_history": [
+            "hit"
+          ],
+          "player_value": 12,
+          "dealer_upcard": "7",
+          "final_dealer_hand": [
+            "7",
+            "K"
+          ],
+          "final_dealer_value": 17
+        }
+      ],
+      [
+        {
+          "hand": [
+            "8",
+            "Q",
+            "Q"
+          ],
+          "action": "double",
+          "action_history": [
+            "double"
+          ],
+          "player_value": 18,
+          "dealer_upcard": "A",
+          "final_dealer_hand": [
+            "A",
+            "4",
+            "K",
+            "2"
+          ],
+          "final_dealer_value": 17
+        }
+      ],
+      [
+        {
+          "hand": [
+            "4",
+            "A",
+            "2"
+          ],
+          "action": "double",
+          "action_history": [
+            "double"
+          ],
+          "player_value": 15,
+          "dealer_upcard": "8",
+          "final_dealer_hand": [
+            "8",
+            "4",
+            "J"
+          ],
+          "final_dealer_value": 22
+        }
+      ],
+      [
+        {
+          "hand": [
+            "5",
+            "A"
+          ],
+          "action": "stand",
+          "action_history": [
+            "stand"
+          ],
+          "player_value": 16,
+          "dealer_upcard": "Q",
+          "final_dealer_hand": [
+            "Q",
+            "8"
+          ],
+          "final_dealer_value": 18
+        }
+      ],
+      [
+        {
+          "hand": [
+            "6",
+            "2",
+            "J",
+            "4"
+          ],
+          "action": "hit",
+          "action_history": [
+            "hit"
+          ],
+          "player_value": 8,
+          "dealer_upcard": "6",
+          "final_dealer_hand": [
+            "6",
+            "K",
+            "J"
+          ],
+          "final_dealer_value": 26
+        },
+        {
+          "hand": [
+            "6",
+            "2",
+            "J",
+            "4"
+          ],
+          "action": "hit",
+          "action_history": [
+            "hit",
+            "hit"
+          ],
+          "player_value": 18,
+          "dealer_upcard": "6",
+          "final_dealer_hand": [
+            "6",
+            "K",
+            "J"
+          ],
+          "final_dealer_value": 26
+        }
+      ]
+    ]
+  }
+]
