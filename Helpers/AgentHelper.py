@@ -11,8 +11,6 @@ class MCTSNode:
         self.visits = 0
         self.value = 0
         self.action_history = state[5]  # Keep track of actions taken to reach this state
-        self.best_action = None  # To store the best action
-        self.uct_values = {}  # To store UCT values for each child action
 
 def simulate_action(state, action):
     player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = copy.deepcopy(state)
@@ -51,7 +49,7 @@ def is_terminal(state):
     # Terminal if we've finished all hands
     return current_hand_idx >= len(player_hands)
 
-def get_legal_actions(state, bankroll, wager):
+def get_legal_actions(state):
     """
     Returns a list of legal actions for the given state.
     State: (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
@@ -60,20 +58,20 @@ def get_legal_actions(state, bankroll, wager):
     player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = state
     hand = player_hands[current_hand_idx]
     actions = ["hit", "stand"]
-    if len(hand) == 2 and (wager*2) <= bankroll:
+    if len(hand) == 2:
         actions.append("double")
         if hand[0] == hand[1] and splits_remaining > 0 and len(deck) >= 2:
             actions.append("split")
     return actions
 
-def rollout(state, bankroll, wager):
+def rollout(state):
     player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history = copy.deepcopy(state)
     rewards = []
     while current_hand_idx < len(player_hands):
         # Play out this hand
         while True:
             hand = player_hands[current_hand_idx]
-            actions = get_legal_actions((player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history), bankroll, wager)
+            actions = get_legal_actions((player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history))
             action = rollout_policy(hand, dealer_hand[0], actions)
             player_hands, current_hand_idx_, dealer_hand, deck, splits_remaining, action_history = simulate_action(
                 (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history), action
@@ -138,7 +136,7 @@ def rollout_policy(player_hand, dealer_upcard, actions):
     else:
         return "hit"  # Fallback
 
-def mcts_search(root_state, num_simulations, bankroll, wager, c=1.41):
+def mcts_search(root_state, num_simulations, c=1.41):
     """
     Performs MCTS search from the given root state.
 
@@ -159,16 +157,14 @@ def mcts_search(root_state, num_simulations, bankroll, wager, c=1.41):
             state = simulate_action(state, action)
         # Expansion
         if not is_terminal(state):
-            for action in get_legal_actions(state, bankroll, wager):
+            for action in get_legal_actions(state):
                 node.children[action] = MCTSNode(simulate_action(state, action), parent=node)
         # Simulation
-        reward = rollout(state, bankroll, wager)
+        reward = rollout(state)
         # Backpropagation
         backpropagate(node, reward)
     # Choose best action
     best_action = max(root.children.items(), key=lambda item: item[1].value / item[1].visits)[0]
-    root.best_action = best_action  # Log the best action
-    root.agent_hand = root_state[0]  # Log the agent's hand
     return best_action
 
 def select_uct(node, c=1.41):
@@ -186,7 +182,6 @@ def select_uct(node, c=1.41):
             exploitation = child.value / child.visits
             exploration = c * math.sqrt(math.log(node.visits + 1) / child.visits)
             uct_value = exploitation + exploration
-        node.uct_values[action] = uct_value  # Log UCT value
         if uct_value > best_value:
             best_value = uct_value
             best_action = action
@@ -203,24 +198,17 @@ def backpropagate(node, reward):
         node = node.parent
 
 """ def print_node_statistics(node):
-    print("Node Statistics:")
-    print(f"Best Action: {node.best_action}")
-    print(f"Agent's Hand: {node.state[0]}")
-    print("UCT Values:")
-    for action, uct_value in node.uct_values.items():
-        print(f"  Action: {action}, UCT Value: {uct_value}") """
-
 class SimAgent:
     def __init__(self, num_simulations=1000, c=1.41):
         self.num_simulations = num_simulations
         self.c = c
 
-    def get_action(self, player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, wager, bankroll):
+    def get_action(self, player_hands, current_hand_idx, dealer_hand, deck, splits_remaining):
         """
         Gets the best action from the MCTS agent.
         """
         # Initialize action history
         action_history = []
         root_state = (player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, action_history)
-        best_action = mcts_search(root_state, self.num_simulations, bankroll, wager, self.c)
+        best_action = mcts_search(root_state, self.num_simulations, self.c)
         return best_action
