@@ -1,19 +1,52 @@
-from Game_Engine import PlayHand
-from MCTS_MDP_Agent import *
-from DeckHelper import *
-from metrics import *
+from Helpers.AgentHelper import *
+from Helpers.DeckHelper import *
+from Helpers.MetricsHelper import *
 import json
 
 # A copy of the game engine file adapted to run on our MCTS-MDP agent
+
+class PlayHand:
+
+    def __init__(self, player_hand, dealer_hand, deck):
+        self.player_hand = player_hand
+        self.dealer_hand = dealer_hand
+        self.deck = deck
+
+    def player_turn(self, action):
+        value = Hand(self.player_hand)
+
+        if action in ("hit", "double"):  # Cleaned up the 'in' statement
+            self.player_hand.append(self.deck.pop())
+            player_value = value.compute_value()
+            print(self.player_hand)
+            return player_value
+        elif action == "stand":
+            player_value = value.compute_value()
+            print(self.dealer_hand)
+            return player_value
+        else:
+            return value.compute_value()
+
+    def dealer_turn(self):
+        dealer_value = Hand(self.dealer_hand).compute_value()
+        print("Dealers Hand: {dealer}".format(dealer=self.dealer_hand))
+
+        while dealer_value < 17:
+            self.dealer_hand.append(self.deck.pop())
+            dealer_value = Hand(self.dealer_hand).compute_value()  # Recalculate
+
+        print("Final Dealers Hand: {dealer}".format(dealer=self.dealer_hand))
+        return dealer_value
+
 class SimGame:
     """
     Integrates the MCTS agent into the Blackjack game.
     """
-    def __init__(self, num_simulations=1000, mcts_c=1.41):
+    def __init__(self, num_simulations=1000, mcts_c=1.41, num_rounds = 50):
         self.active_deck = None
         self.rounds_played = 0
         self.bankroll = 100
-        self.num_rounds = 10
+        self.num_rounds = num_rounds
         self.agent = SimAgent(num_simulations, mcts_c)
         self.simulation_results = [] 
 
@@ -172,19 +205,23 @@ class SimGame:
         print(f"Simulation finished. Final bankroll: ${self.bankroll}")
 
 if __name__ == "__main__":
-    num_simulation_runs = 1 # Define how many times to run the game simulation
-    all_simulation_data = []
+    num_runs = 25 # Define how many times to run the game simulation
+    num_sims = 1000 # how many iterations are performed
+    all_simulation_data = [{
+        "number_of_runs": num_runs,
+        "number_of_simulation_iterations": num_sims
+                            }]
 
-    for i in range(num_simulation_runs): # Create a new game instance for each run
+    for i in range(num_runs): # Create a new game instance for each run
         print(f"Running simulation run {i+1}")
-        game = SimGame(num_simulations=1000, mcts_c=1.41) 
-        game.play_game()
+        game = SimGame(num_simulations=num_sims, mcts_c=1.41, num_rounds=50) 
+        game.play_game(num_decks=6) #most casinos use 6 decks in a shoe
         all_simulation_data.extend(game.simulation_results) # Collect results from this run
 
     # Save the collected data
     filename=input("Save file as: ")+'.json'
-    with open(filename, 'w') as f:
-        json.dump(all_simulation_data, f, indent=4)
+    with open('data/'+filename, 'w') as f:
+        json.dump(all_simulation_data, f, indent=2)
 
-    print(f"Finished {num_simulation_runs} simulation runs. Results saved to {filename}")
+    print(f"Finished {num_runs} simulation runs. Results saved to {filename}")
 

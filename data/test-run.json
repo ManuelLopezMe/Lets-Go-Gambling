@@ -1,0 +1,30 @@
+[
+  {
+    "number_of_runs": 2,
+    "number_of_simulation_iterations": 500
+  },
+  {
+    "final_bankroll": 70,
+    "rounds_played": 5,
+    "initial_bankroll": 100,
+    "round_outcomes": [
+      5,
+      -5,
+      -5,
+      -5,
+      5
+    ]
+  },
+  {
+    "final_bankroll": 50,
+    "rounds_played": 5,
+    "initial_bankroll": 100,
+    "round_outcomes": [
+      -5,
+      -5,
+      -5,
+      -5,
+      -5
+    ]
+  }
+]

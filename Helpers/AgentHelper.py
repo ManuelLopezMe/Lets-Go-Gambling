@@ -1,7 +1,7 @@
 import copy # Deep copy lets us simulate actions without altering the game state
 import math
-from Game_Engine import PlayHand
-from metrics import Hand  
+from main import PlayHand
+from Helpers.MetricsHelper import Hand  
 
 class MCTSNode:
     def __init__(self, state, parent=None):
