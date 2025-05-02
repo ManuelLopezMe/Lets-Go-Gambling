@@ -43,7 +43,7 @@ class SimGame:
     Integrates the MCTS agent into the Blackjack game.
     """
     def __init__(self, num_simulations=1000, mcts_c=1.41, num_rounds = 50):
-        self.active_deck = None
+        self.active_shoe = None
         self.rounds_played = 0
         self.bankroll = 100
         self.num_rounds = num_rounds
@@ -51,8 +51,8 @@ class SimGame:
         self.simulation_results = [] 
 
     def _deal_cards(self):
-        player_hand = self.active_deck.deal_hand()
-        dealer_hand = self.active_deck.deal_hand()
+        player_hand = self.active_shoe.deal_hand()
+        dealer_hand = self.active_shoe.deal_hand()
         return player_hand, dealer_hand
 
     def _get_wager(self):
@@ -62,10 +62,10 @@ class SimGame:
         return 5
     
     def _check_reshuffle(self):
-        if len(self.active_deck.game_deck()) <= round(
-            len(self.active_deck.all_cards()) * 0.2 # Might change it so that it's a random percentage using np.random
+        if len(self.active_shoe.game_deck()) <= round(
+            len(self.active_shoe.all_cards()) * 0.2 # Might change it so that it's a random percentage using np.random
         ):
-            self.active_deck.shuffle()
+            self.active_shoe.shuffle()
 
     def get_player_action(self, player_hands, current_hand_idx, dealer_hand, deck, splits_remaining):
         return self.agent.get_action(player_hands, current_hand_idx, dealer_hand, deck, splits_remaining, self._get_wager(), self.bankroll)
@@ -91,7 +91,7 @@ class SimGame:
 
             while True:
                 action = self.get_player_action(
-                    [current_hand], 0, dealer_hand, self.active_deck.game_deck(), splits_remaining
+                    [current_hand], 0, dealer_hand, self.active_shoe.game_deck(), splits_remaining
                 )
                 action_history = action_history + [action]
 
@@ -106,7 +106,7 @@ class SimGame:
 
                 if action == "hit":
                     player_value = PlayHand(
-                        current_hand, None, self.active_deck.game_deck()
+                        current_hand, None, self.active_shoe.game_deck()
                     ).player_turn(action)
                     print(f"Player hits, hand: {current_hand}, value: {player_value}")
                     if player_value > 21:
@@ -124,7 +124,7 @@ class SimGame:
                     
                     current_wager *= 2
                     player_value = PlayHand(
-                        current_hand, None, self.active_deck.game_deck()
+                        current_hand, None, self.active_shoe.game_deck()
                     ).player_turn(action)
                     print(f"Player doubles, hand: {current_hand}, value: {player_value}")
                     if player_value > 21:
@@ -141,9 +141,9 @@ class SimGame:
                     and splits_remaining > 0
                 ):
                     right_hand = [current_hand.pop()]
-                    right_hand.append(self.active_deck.game_deck().pop())
+                    right_hand.append(self.active_shoe.game_deck().pop())
                     left_hand = current_hand
-                    left_hand.append(self.active_deck.game_deck().pop())
+                    left_hand.append(self.active_shoe.game_deck().pop())
                     print(f"Right hand: {right_hand}")
                     print(f"Left hand: {left_hand}")
                     hands_queue.append((right_hand, current_wager, splits_remaining - 1, action_history + ["split_right"]))
@@ -153,7 +153,7 @@ class SimGame:
                     print("Invalid action. Please choose hit, stand, double, or split.")
 
         # Dealer's turn
-        dealer_value = PlayHand(None, dealer_hand, self.active_deck.game_deck()).dealer_turn()
+        dealer_value = PlayHand(None, dealer_hand, self.active_shoe.game_deck()).dealer_turn()
         final_dealer_hand = dealer_hand[:]  # Capture the final dealer's hand
         print(f"Dealer final hand: {final_dealer_hand}, value: {dealer_value}")
 
@@ -201,8 +201,8 @@ class SimGame:
             return -wager if action != "double" else -2 * wager
 
     def play_game(self, num_decks=2):  
-        self.active_deck = Deck(num_decks)
-        self.active_deck.shuffle()
+        self.active_shoe = Deck(num_decks)
+        self.active_shoe.shuffle()
 
         initial_bankroll = self.bankroll # Store initial bankroll for this simulation run
         round_outcomes_list = [] # Store outcome for each round in this run

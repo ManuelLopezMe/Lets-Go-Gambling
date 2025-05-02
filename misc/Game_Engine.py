@@ -5,15 +5,15 @@ from Helpers.DeckHelper import *
 
 class PlayGame:
     def __init__(self):
-        self.active_deck = None  # Initialize in __init__
+        self.active_shoe = None  # Initialize in __init__
         self.rounds_played = 0  # Initialize here
         self.bankroll = 100  # Initialize here
         self.num_rounds = 10  # Initialize here
 
     def _deal_cards(self):
         """Deals initial cards to player and dealer."""
-        player_hand = self.active_deck.deal_hand()
-        dealer_hand = self.active_deck.deal_hand()
+        player_hand = self.active_shoe.deal_hand()
+        dealer_hand = self.active_shoe.deal_hand()
         return player_hand, dealer_hand
 
     def _get_wager(self):
@@ -33,10 +33,10 @@ class PlayGame:
 
     def _check_reshuffle(self):
         """Reshuffles the deck if needed."""
-        if len(self.active_deck.game_deck()) <= round(
-            len(self.active_deck.all_cards()) * 0.2 # reshuffle after 20% of the deck has been played
+        if len(self.active_shoe.game_deck()) <= round(
+            len(self.active_shoe.all_cards()) * 0.2 # reshuffle after 20% of the deck has been played
         ):
-            self.active_deck.shuffle()
+            self.active_shoe.shuffle()
 
     def play_round(self, wager, player_hand, dealer_hand):
         player_value = Hand(player_hand).compute_value()
@@ -58,7 +58,7 @@ class PlayGame:
 
                 if action == "hit":
                     player_value = PlayHand(
-                        current_hand, None, self.active_deck.game_deck()
+                        current_hand, None, self.active_shoe.game_deck()
                     ).player_turn(action)
                     if player_value > 21:
                         print(f"You busted with {current_hand}!")
@@ -71,7 +71,7 @@ class PlayGame:
                 elif action == "double":
                     current_wager *= 2
                     player_value = PlayHand(
-                        current_hand, None, self.active_deck.game_deck()
+                        current_hand, None, self.active_shoe.game_deck()
                     ).player_turn(action)
                     if player_value > 21:
                         print(f"You busted with {current_hand}!")
@@ -86,9 +86,9 @@ class PlayGame:
                     and len(hand_results) + len(hands_queue) < 4  # Limit to 4 hands max
                 ):
                     right_hand = [current_hand.pop()]
-                    right_hand.append(self.active_deck.game_deck().pop())
+                    right_hand.append(self.active_shoe.game_deck().pop())
                     left_hand = current_hand
-                    left_hand.append(self.active_deck.game_deck().pop())
+                    left_hand.append(self.active_shoe.game_deck().pop())
                     print(f"Right hand: {right_hand}")
                     print(f"Left hand: {left_hand}")
 
@@ -100,7 +100,7 @@ class PlayGame:
                     print("Invalid action. Please choose hit, stand, double, or split.")
 
         # Process dealer's hand once after all player hands are resolved
-        dealer_value = PlayHand(None, dealer_hand, self.active_deck.game_deck()).dealer_turn()
+        dealer_value = PlayHand(None, dealer_hand, self.active_shoe.game_deck()).dealer_turn()
 
         # Calculate payouts for all hands
         payouts = []  # Temporary list to store payouts
@@ -126,8 +126,8 @@ class PlayGame:
             return -wager if action != "double" else -2 * wager
 
     def play_game(self, num_decks=2):  # Moved default args to __init__
-        self.active_deck = Deck(num_decks)
-        self.active_deck.shuffle()
+        self.active_shoe = Deck(num_decks)
+        self.active_shoe.shuffle()
 
         while self.rounds_played < self.num_rounds and self.bankroll > 0:
             wager = self._get_wager()
