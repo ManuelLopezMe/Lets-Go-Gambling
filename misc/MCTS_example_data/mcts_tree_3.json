@@ -1,0 +1,291 @@
+[
+  {
+    "id": 0,
+    "parent_id": null,
+    "action_history": [],
+    "best_action": "hit",
+    "uct_values": {
+      "hit": -0.473848801139635,
+      "stand": -0.473848801139635,
+      "double": -0.473848801139635
+    },
+    "visits": 100,
+    "value": -100,
+    "agent_hand": [
+      [
+        "A",
+        "6"
+      ]
+    ],
+    "children": [
+      1,
+      10,
+      11
+    ]
+  },
+  {
+    "id": 1,
+    "parent_id": 0,
+    "action_history": [
+      "hit"
+    ],
+    "best_action": null,
+    "uct_values": {
+      "hit": -0.3408619888942307,
+      "stand": -0.3408619888942307
+    },
+    "visits": 34,
+    "value": -34,
+    "agent_hand": [
+      [
+        "A",
+        "6",
+        "10"
+      ]
+    ],
+    "children": [
+      2,
+      9
+    ]
+  },
+  {
+    "id": 2,
+    "parent_id": 1,
+    "action_history": [
+      "hit",
+      "hit"
+    ],
+    "best_action": null,
+    "uct_values": {
+      "stand": -0.1699259341265904,
+      "hit": -0.11261349710150803
+    },
+    "visits": 17,
+    "value": -17,
+    "agent_hand": [
+      [
+        "A",
+        "6",
+        "10",
+        "9"
+      ]
+    ],
+    "children": [
+      3,
+      4
+    ]
+  },
+  {
+    "id": 3,
+    "parent_id": 2,
+    "action_history": [
+      "hit",
+      "hit",
+      "stand"
+    ],
+    "best_action": null,
+    "uct_values": {},
+    "visits": 8,
+    "value": -8,
+    "agent_hand": [
+      [
+        "A",
+        "6",
+        "10",
+        "9"
+      ]
+    ],
+    "children": []
+  },
+  {
+    "id": 4,
+    "parent_id": 2,
+    "action_history": [
+      "hit",
+      "hit",
+      "hit"
+    ],
+    "best_action": null,
+    "uct_values": {
+      "stand": 0.13558560037495893,
+      "hit": 0.13558560037495893
+    },
+    "visits": 8,
+    "value": -8,
+    "agent_hand": [
+      [
+        "A",
+        "6",
+        "10",
+        "9",
+        "8"
+      ]
+    ],
+    "children": [
+      5,
+      6
+    ]
+  },
+  {
+    "id": 5,
+    "parent_id": 4,
+    "action_history": [
+      "hit",
+      "hit",
+      "hit",
+      "stand"
+    ],
+    "best_action": null,
+    "uct_values": {},
+    "visits": 4,
+    "value": -4,
+    "agent_hand": [
+      [
+        "A",
+        "6",
+        "10",
+        "9",
+        "8"
+      ]
+    ],
+    "children": []
+  },
+  {
+    "id": 6,
+    "parent_id": 4,
+    "action_history": [
+      "hit",
+      "hit",
+      "hit",
+      "hit"
+    ],
+    "best_action": null,
+    "uct_values": {},
+    "visits": 3,
+    "value": -3,
+    "agent_hand": [
+      [
+        "A",
+        "6",
+        "10",
+        "9",
+        "8",
+        "J"
+      ]
+    ],
+    "children": [
+      7,
+      8
+    ]
+  },
+  {
+    "id": 7,
+    "parent_id": 6,
+    "action_history": [
+      "hit",
+      "hit",
+      "hit",
+      "hit",
+      "stand"
+    ],
+    "best_action": null,
+    "uct_values": {},
+    "visits": 1,
+    "value": -1,
+    "agent_hand": [
+      [
+        "A",
+        "6",
+        "10",
+        "9",
+        "8",
+        "J"
+      ]
+    ],
+    "children": []
+  },
+  {
+    "id": 8,
+    "parent_id": 6,
+    "action_history": [
+      "hit",
+      "hit",
+      "hit",
+      "hit",
+      "hit"
+    ],
+    "best_action": null,
+    "uct_values": {},
+    "visits": 1,
+    "value": -1,
+    "agent_hand": [
+      [
+        "A",
+        "6",
+        "10",
+        "9",
+        "8",
+        "J",
+        "4"
+      ]
+    ],
+    "children": []
+  },
+  {
+    "id": 9,
+    "parent_id": 1,
+    "action_history": [
+      "hit",
+      "stand"
+    ],
+    "best_action": null,
+    "uct_values": {},
+    "visits": 16,
+    "value": -16,
+    "agent_hand": [
+      [
+        "A",
+        "6",
+        "10"
+      ]
+    ],
+    "children": []
+  },
+  {
+    "id": 10,
+    "parent_id": 0,
+    "action_history": [
+      "stand"
+    ],
+    "best_action": null,
+    "uct_values": {},
+    "visits": 33,
+    "value": -33,
+    "agent_hand": [
+      [
+        "A",
+        "6"
+      ]
+    ],
+    "children": []
+  },
+  {
+    "id": 11,
+    "parent_id": 0,
+    "action_history": [
+      "double"
+    ],
+    "best_action": null,
+    "uct_values": {},
+    "visits": 33,
+    "value": -33,
+    "agent_hand": [
+      [
+        "A",
+        "6",
+        "10"
+      ]
+    ],
+    "children": []
+  }
+]
