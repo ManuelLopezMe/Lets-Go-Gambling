@@ -316,9 +316,9 @@ Here’s the basic loop MCTS runs over and over to build its search tree:
 \begin{itemize}
     \item \textbf{Selection:} Starting from the root node (the current game state), the algorithm traverses the tree by selecting child nodes that optimize the Upper Confidence Bounds for Trees (UCT) criterion:
     \[
-    a^* = \arg\max_a \left[ Q(s, a) + c \sqrt{\frac{\ln N(s)}{N(s, a)}} \right],
+    a^* = \arg\max_a \left[ Q(s, a) + c \sqrt{\frac{\ln n(s)}{n(s, a)}} \right],
     \]
-    where $N(s)$ is the visit count of state $s$, $N(s, a)$ is the visit count of action $a$ from state $s$, and $c = \sqrt{2}$ controls the exploration-exploitation tradeoff \cite{kocsis2006bandit}. Selection continues until a leaf node is reached.
+    where $n(s)$ is the visit count of state $s$, $n(s, a)$ is the visit count of action $a$ from state $s$, and $c = \sqrt{2}$ controls the exploration-exploitation tradeoff \cite{kocsis2006bandit}. Selection continues until a leaf node is reached.
 
     \item \textbf{Expansion:} If the selected leaf node is non-terminal, one or more child nodes are added to represent unexplored legal actions. The tree is allowed to grow to full game depth, which typically spans 4–6 steps depending on the sequence of player choices such as hits, splits, and doubles. No artificial depth limit is imposed.
 \end{itemize} 
@@ -373,8 +373,8 @@ Let
 \subsection{Node Statistics}
 For each node \(s\) and action \(a\in A(s)\):
 \begin{itemize}[leftmargin=1.5cm]
-  \item \(N(s)\): visits of state \(s\)
-  \item \(N(s,a)\): times action \(a\) taken
+  \item \(n(s)\): visits of state \(s\)
+  \item \(n(s,a)\): times action \(a\) taken
   \item \(W(s,a)\): total reward from those simulations
   \item \(Q(s,a)=W(s,a)/N(s,a)\): average action value
 \end{itemize}
@@ -387,7 +387,7 @@ Actions map to MDP transitions: Hit = sample one card, Stand = terminal + dealer
 \subsection{{Decision Rule}}
 After \(M\) iterations,
 \[
- \hat Q(s_0,a)=\frac{W(s_0,a)}{N(s_0,a)},\quad a^*=\arg\max_a \hat Q(s_0,a).
+ \hat Q(s_0,a)=\frac{W(s_0,a)}{n(s_0,a)},\quad a^*=\arg\max_a \hat Q(s_0,a).
 \]
 This action approximates one that maximizes the true $Q^*(s_0,a$) in the full MDP
 
@@ -462,12 +462,12 @@ $s$ & Current game state (including player's hand, dealer upcard, and shoe compo
 $a$ & Action taken by the player (e.g., Hit, Stand, Double, Split) \\
 $Q(s, a)$ & Estimated expected return (EV) of taking action $a$ in state $s$ \\
 $c$ & UCT exploration constant, balancing exploration and exploitation ($c = \sqrt{2}$) \\
-$N(s)$ & Number of times state $s$ has been visited \\
-$N(s, a)$ & Number of times action $a$ has been taken from state $s$ \\
+$n(s)$ & Number of times state $s$ has been visited \\
+$n(s, a)$ & Number of times action $a$ has been taken from state $s$ \\
 $U$ & Dealer's visible upcard \\
 $x$ & Current composition of the shoe (card counts or probability vector) \\
 $P_d(y \mid U, x)$ & Probability that the dealer ends with value $y$, given upcard $U$ and shoe $x$ \\
-$N$ & Total number of  cards remaining in the shoe composition\\
+$N$ & Number of Monte Carlo rollouts per simulation (e.g., per dealer evaluation) \\
 $\pi$ & Policy used to select actions during simulation\\
 \hline
 \end{tabular}
