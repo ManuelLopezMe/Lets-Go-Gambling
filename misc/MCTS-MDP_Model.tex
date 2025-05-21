@@ -366,7 +366,7 @@ Let
 \item \(U\): Dealer up\-card
 \item \(X=(X_r)_{r\in R}\): Remaining card counts
 \item \(s_{\mathrm{split}}\in\{0,1,2,3\}\): Splits remaining
-    \item \end{itemize}
+\end{itemize}
     \item Actions \(A(s)=\{\mathrm{Stand},\mathrm{Hit},\mathrm{Double}\}\) plus \(\mathrm{Split}\) if allowed.
 \end{itemize}
 
@@ -399,7 +399,7 @@ This action approximates one that maximizes the true $Q^*(s_0,a$) in the full MD
 \end{itemize}
 
 \section{Model Results}
-We ran 25 independent Blackjack simulations with \(M=1000\) MCTS iterations per hand.  Figures~\ref{fig:bankroll}–\ref{fig:action_heatmaps} summarize:
+We ran 25 independent Blackjack simulations with \(M=1000\) MCTS iterations per hand. The agent begins with an initial bankroll of $100.00$ dollars and bets a flat $10$ dollars for every hand for up to 50 possible hands. Figures~\ref{fig:bankroll}–\ref{fig:action_heatmaps} summarize:
 
 \begin{figure}[H]
   \centering
