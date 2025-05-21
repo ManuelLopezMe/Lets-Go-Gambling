@@ -1,0 +1,8 @@
+id,parent_id,action,hand,value,visits,best_action
+0,,ROOT,10-2,92.0,100,double
+1,0.0,double,10-2-6,61.0,61,
+2,0.0,stand,10-2,-2.0,2,
+3,0.0,hit,10-2-6,33.0,37,
+4,3.0,hit,10-2-6-8,-2.0,2,
+5,4.0,stand,10-2-6-8,-1.0,1,
+6,3.0,stand,10-2-6,34.0,34,

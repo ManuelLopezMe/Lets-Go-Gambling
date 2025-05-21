@@ -16,11 +16,10 @@ if __name__ == "__main__":
     agent = SimAgent(num_simulations=100, c=1.41)
     action, root = agent.get_action([player_hand], 0, dealer_hand, shoe.game_deck(), splits_remaining, wager, bankroll)
     print(f"Agent chose action: {action}")
-    #if len(shoe.game_deck()) <= round(len((shoe.all_cards()*.2))):
-    print_node_statistics(root, 'misc/MCT-example-3.txt')
+    print_node_statistics(root, 'misc/MCTS-example.txt')
 
     tree_data = collect_tree_data(root)
-    with open("misc/mcts_tree_3.json", "w") as f:
+    with open("misc/mcts_tree.json", "w") as f:
         json.dump(tree_data, f, indent=2)
-    print("Tree data saved to mcts_tree_3.json")
+    print("Tree data saved to misc/mcts_tree.json")
         #break

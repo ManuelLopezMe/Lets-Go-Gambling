@@ -4,8 +4,10 @@ This project explores and implements advanced strategies for playing Blackjack u
 
 ## Project Structure
 
-```
-lets-go-gambling/
-│
 
+The pdf gives a fully detailed report behind the logic and motivation for this project as well as it results. The data and graphs explored can be found within the data folder and simulation analysis notebook respectively.
+
+Within in the miscellanious folder there's a game engine file which if ran, you can play the blackjack game used by the agent.
+
+you can test the simulation model yourself in main.py and adjust the parameters accordingly. The actual MCTS algorithm is found in the AgentHelper.py file.
 
