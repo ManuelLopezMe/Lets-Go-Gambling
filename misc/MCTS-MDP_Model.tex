@@ -295,11 +295,7 @@ The expected value for each action can be given as:
 This requires we pre-compute $P_d(y|U, x)$ for each dealer upcard $U$ and card-count $x$, iterate over all reachable states of $(H, U, x, σ)$ and store their values. So that in a given state we lookup the optimal policy $π$ to take.
 
 However, this is gravely computationally intensive because there can be ${52D}\choose{k}$ possible states for a given hand of size K. For example, suppose a game with a shoe of 6 decks, the number of possible combinations for the players initial hand is ${312}\choose{2}$=$48,516$. This count skyrockets as you allow $k$ to grow as the player increases his hand count.
-\documentclass[12pt]{article}
-\usepackage{amsmath, amssymb, amsfonts}
-\usepackage{enumitem}
-\usepackage{geometry}
-\geometry{margin=1in}
+
 
 \section{Method: Monte Carlo Tree Search for Blackjack MDP}
 
