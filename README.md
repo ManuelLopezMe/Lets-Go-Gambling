@@ -1,6 +1,6 @@
 # Lets-Go-Gambling
 
-A research project exploring optimal Blackjack strategies using Monte Carlo Tree Search (MCTS) and Markov Decision Processes (MDP). My self-published paper can be found on ["Academia"](https://www.academia.edu/129466689/Finding_the_Optimal_Blackjack_Strategy_Using_Markov_Decision_Process_Monte_Carlo?source=swp_share).
+A research project exploring optimal Blackjack strategies using Monte Carlo Tree Search (MCTS) and Markov Decision Processes (MDP). My self-published paper can be found on [Academia](https://www.academia.edu/129466689/Finding_the_Optimal_Blackjack_Strategy_Using_Markov_Decision_Process_Monte_Carlo?source=swp_share).
 
 ## Overview
 
